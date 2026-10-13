@@ -7,17 +7,23 @@
   "entry": "main.lua",
   "version": "1.0.0",
   "taptap_publish": {
-    "title": "",
-    "description": "",
-    "category": "",
+    "title": "舆论刹车",
+    "description": "在一次意外的测试中，你的每个微小操作都导致了不可预知的结果，最终会在社会上带来什么影响呢？",
+    "category": "casual",
     "screen_orientation": "landscape",
     "collection_type": "sce",
     "trial_note": "",
-    "app_platforms": "1,2"
+    "app_platforms": "1,2",
+    "developer_id": 349729,
+    "app_id": 972907,
+    "miniapp_id": "tapmcgh4kzcb49usj0"
   },
   "assets": {
     "icon": "",
     "screenshots": [],
     "promotional_image": ""
+  },
+  "metadata": {
+    "updated_at": "2026-10-13T00:18:31.792Z"
   }
 }
