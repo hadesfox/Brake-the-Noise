@@ -9,6 +9,7 @@ local UI = require("urhox-libs/UI")
 -- ============================================================================
 -- 1. 全局变量声明
 -- ============================================================================
+---@type Widget?
 local uiRoot_ = nil
 local debugDraw_ = false
 
@@ -91,9 +92,11 @@ function HandleKeyDown(eventType, eventData)
 
     if key == KEY_Z then
         debugDraw_ = not debugDraw_
-        local debugPanel = uiRoot_:FindById("debugPanel")
-        if debugPanel then
-            debugPanel:SetVisible(debugDraw_)
+        if uiRoot_ then
+            local debugPanel = uiRoot_:FindById("debugPanel")
+            if debugPanel then
+                debugPanel:SetVisible(debugDraw_)
+            end
         end
     end
 end
