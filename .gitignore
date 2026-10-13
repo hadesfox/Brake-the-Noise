@@ -27,6 +27,11 @@ ossutil_output/
 .emmylua/
 .installer/
 .maker/
+.agent/
+.agents/
+.opencode/
+.cli/
+scripts/.luarc.json
 
 # Maker engine assets & agent files (provided by ai-dev-kit, not user source)
 engine-docs/
