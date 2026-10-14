@@ -22,9 +22,9 @@ local function Text(id)
     return label and label:GetText() or ""
 end
 
-local function Key(down, repeatKey)
+local function Key(down, repeatKey, keyCode)
     local data = VariantMap()
-    data["Key"] = Variant(KEY_SPACE)
+    data["Key"] = Variant(keyCode or KEY_SPACE)
     if down then
         data["Repeat"] = Variant(repeatKey)
         SendEvent("KeyDown", data)
@@ -33,8 +33,8 @@ local function Key(down, repeatKey)
     end
 end
 
-local function Pointer(down, kind, button)
-    local action = UI.FindById("demoAction")
+local function Pointer(down, kind, button, targetId)
+    local action = UI.FindById(targetId or "demoAction")
     assert(action, "没有确认区")
     UI.Layout()
     local layout = action:GetAbsoluteLayout()
@@ -111,10 +111,45 @@ function HandleIntegrationTest()
         Focus(true)
     elseif steps == 30 then
         Check(time:GetFrameNumber() > pausedLastFrame, "暂停期间引擎仍推进验证帧")
-        Check(Text("demoCaption") == "游标移动中", "恢复后回到原状态")
+        Check(Text("demoCaption") == "鞋底移动中", "恢复后回到原状态")
         Key(true, false)
         Check(Text("demoReading") ~= "停点  —", "恢复后可以按停")
+        lockedText = Text("demoReading")
         Key(false, false)
+    elseif steps == 32 then
+        Key(true, false, KEY_RIGHT)
+        Key(false, false, KEY_RIGHT)
+        Check(Text("demoReading") ~= lockedText, "同点换鞋改变真实面积")
+        Check(Text("demoReading"):find("接触面积", 1, true) ~= nil, "显示接触几何读数")
+    elseif steps == 34 then
+        Key(true, false, KEY_LEFT)
+        Key(false, false, KEY_LEFT)
+        Check(Text("demoReading") == lockedText, "换回原鞋复现同一落点面积")
+    elseif steps == 36 then
+        Key(true, false)
+        Key(false, false)
+        Check(Text("demoReading") == "停点  —", "换鞋后可继续测量")
+    elseif steps == 37 then
+        Key(true, false, KEY_RIGHT)
+        Key(false, false, KEY_RIGHT)
+        local button = UI.FindById("shoe2") --[[@as Button?]]
+        assert(button)
+        Check(button:IsDisabled(), "移动中不能换鞋")
+    elseif steps == 40 then
+        Key(true, false)
+        Key(false, false)
+        lockedText = Text("demoReading")
+        Check(lockedText ~= "停点  —", "再次测量后能锁定")
+    elseif steps == 42 then
+        Pointer(true, "touch", MOUSEB_LEFT, "shoe3")
+    elseif steps == 43 then
+        Pointer(false, "touch", MOUSEB_LEFT, "shoe3")
+        Check(Text("demoReading") ~= lockedText, "触屏按钮换成分段鞋产生不同接触面积")
+    elseif steps == 45 then
+        Pointer(true, "touch", MOUSEB_LEFT, "shoe1")
+    elseif steps == 46 then
+        Pointer(false, "touch", MOUSEB_LEFT, "shoe1")
+        Check(Text("demoReading") == lockedText, "触屏换回宽底复现同点几何")
         print(string.format("[集成验证] %s，断言=%d 失败=%d",
             failures == 0 and "PASS" or "FAIL", checks, failures))
     end
