@@ -15,6 +15,8 @@ local View = {}
 ---@field lever LeverConfig
 ---@field contact ContactMappingConfig
 ---@field showDebugState boolean 是否显示隐藏状态数字；正式局必须为 false
+---@field embedded boolean? 嵌入驾驶舱页面时为 true：只返回卡片，不自建全屏外壳
+---@field allowShoeSwitch boolean? 是否允许锁定后同点换鞋；只有开发比较台为 true
 
 ---@class BrakeTestDemoView
 ---@field root Widget
@@ -33,6 +35,7 @@ View.PHASE_DONE = "done"
 ---@param onSelect fun(index: integer)
 ---@return BrakeTestDemoView
 function View.Create(config, demo, onConfirm, onSelect)
+    local shoeSwitch = demo.allowShoeSwitch ~= false
     local phaseLabel = UI.Label { id = "phaseLabel", text = "第 1 轮 · 落点与接触面", fontSize = 12 }
     local caption = UI.Label { id = "demoCaption", text = "鞋底移动中", fontSize = 18 }
     local reading = UI.Label {
@@ -49,6 +52,7 @@ function View.Create(config, demo, onConfirm, onSelect)
     local note = UI.Label {
         text = "鞋型仅用于开发；第 1 轮按停后可换鞋对比同一落点。",
         width = "100%", fontSize = 11, whiteSpace = "normal",
+        visible = shoeSwitch,
     }
     local pedal = UI.Panel {
         id = "landingPedal", position = "absolute", borderRadius = 0,
@@ -152,8 +156,10 @@ function View.Create(config, demo, onConfirm, onSelect)
         }
     end
     local shoeRow = UI.Panel {
-        width = "100%", flexDirection = "row", flexWrap = "wrap",
+        id = "shoeRow", width = "100%", flexDirection = "row", flexWrap = "wrap",
         gap = 6, children = shoeButtons,
+        -- 正式流程在角色准备阶段定鞋，测试中不换鞋；只有开发比较台显示这一行。
+        visible = shoeSwitch,
     }
     local action = UI.Panel {
         id = "demoAction", width = "100%", height = 64,
@@ -192,23 +198,29 @@ function View.Create(config, demo, onConfirm, onSelect)
             },
         },
     }
-    local root = UI.Panel {
-        width = "100%", height = "100%", backgroundColor = UI.Theme.Color("background"),
-        children = {
-            UI.SafeAreaView {
-                width = "100%", height = "100%", nativeMenuInset = true, padding = 16,
-                children = {
-                    UI.ScrollView {
-                        width = "100%", flexGrow = 1, flexBasis = 0,
-                        children = {
-                            UI.Panel { width = "100%", alignItems = "center", paddingVertical = 8,
-                                children = { card } },
+    -- embedded 供驾驶舱页面复用同一块测试区：外壳（安全区、滚动、背景）由页面负责。
+    local root
+    if demo.embedded then
+        root = card
+    else
+        root = UI.Panel {
+            width = "100%", height = "100%", backgroundColor = UI.Theme.Color("background"),
+            children = {
+                UI.SafeAreaView {
+                    width = "100%", height = "100%", nativeMenuInset = true, padding = 16,
+                    children = {
+                        UI.ScrollView {
+                            width = "100%", flexGrow = 1, flexBasis = 0,
+                            children = {
+                                UI.Panel { width = "100%", alignItems = "center", paddingVertical = 8,
+                                    children = { card } },
+                            },
                         },
                     },
                 },
             },
-        },
-    }
+        }
+    end
     local view = { root = root, lastState = "" }
 
     ---@param landing LandingModel
@@ -218,9 +230,11 @@ function View.Create(config, demo, onConfirm, onSelect)
         local landingActive = phase == View.PHASE_LANDING
         landingBox:SetVisible(landingActive)
         forceBox:SetVisible(not landingActive)
-        shoeRow:SetVisible(landingActive)
-        note:SetVisible(landingActive)
-        -- 离开第一轮就禁用按钮，否则结束态会留着可点却无效的换鞋按钮。
+        -- 换鞋行只在开发比较台显示；正式流程在角色准备阶段定鞋。
+        local shoeRowActive = landingActive and shoeSwitch
+        shoeRow:SetVisible(shoeRowActive)
+        note:SetVisible(shoeRowActive)
+        -- 离开第一轮就禁用按钮，否则会留着可点却无效的换鞋按钮。
         for _, button in ipairs(shoeButtons) do
             button:SetDisabled(not landingActive or landing.moving)
         end

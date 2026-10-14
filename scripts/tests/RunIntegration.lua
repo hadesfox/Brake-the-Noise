@@ -1,19 +1,26 @@
--- 集成验证入口：在真实 UI 树上验证鼠标/触屏按下、键盘、两轮切换与跨帧锁定。
--- 第一轮沿用作者已确认的 P1.2 手感：按停 → 可同点换鞋 → 再确认进入第二轮。
--- 确认与换鞋共用同一个按帧去重的 ActionGate，因此每个验证帧只做一次动作。
+-- 两轮判定的输入细节集成验证（骨架版入口）。
+--
+-- 正式流程：落点一次确认 → 力度一次确认；换鞋在角色准备阶段完成，测试中不换鞋。
+-- 这里验证输入边界：右键过滤、同帧去重、长按不重复、暂停不响应、触屏路径。
+-- 会话机会与发帖门槛由 RunFlowIntegration 覆盖；几何读数由纯逻辑测试覆盖。
+--
+-- 注意：每个 Step 在不同的 PostUpdate 帧执行，所以"同帧去重"必须在一个 Step 内
+-- 连续发送两个输入；拆成两步就是两个合法帧，第二个输入会真的生效。
 require("main")
 local UI = require("urhox-libs/UI")
 local GameStart = Start
-local steps = 0
 local checks = 0
 local failures = 0
-local lockedText = ""
-local pausedLeft = 0
-local pausedLastFrame = 0
+local stepIndex = 0
+local waited = 0
+local STEP_TIMEOUT = 600
 
-local PHASE_LANDING = "第 1 轮 · 落点与接触面"
-local PHASE_FORCE = "第 2 轮 · 力度"
-local PHASE_DONE = "本轮两轮判定已结束"
+---@class DetailStep
+---@field desc string
+---@field run fun(): boolean 返回 true 表示本步完成
+
+---@type DetailStep[]
+local steps = {}
 
 local function Check(condition, description)
     checks = checks + 1
@@ -24,38 +31,56 @@ local function Check(condition, description)
 end
 
 local function Text(id)
-    local label = UI.FindById(id) --[[@as Label?]]
-    return label and label:GetText() or ""
+    local widget = UI.FindById(id)
+    if not widget then return "" end
+    local getter = widget.GetText
+    if getter then return getter(widget) end
+    local props = widget.props
+    if props and type(props.text) == "string" then return props.text end
+    return ""
 end
 
-local function Phase()
-    return Text("phaseLabel")
+local function Has(id)
+    return UI.FindById(id) ~= nil
 end
 
-local function ShoeDisabled(id)
-    local button = UI.FindById(id) --[[@as Button?]]
-    assert(button, "找不到鞋型按钮")
-    return button:IsDisabled()
+local function Click(id)
+    local widget = UI.FindById(id)
+    assert(widget, "找不到可点控件 " .. id)
+    UI.Layout()
+    local layout = widget:GetAbsoluteLayout()
+    local scale = UI.Scale.DEFAULT()
+    local x = (layout.x + layout.w / 2) * scale
+    local y = (layout.y + layout.h / 2) * scale
+    UI.HandlePointerDown(UI.PointerEvent.new("PointerDown", {
+        pointerId = 0, pointerType = "mouse", isPrimary = true, button = MOUSEB_LEFT, x = x, y = y,
+    }))
+    UI.HandlePointerUp(UI.PointerEvent.new("PointerUp", {
+        pointerId = 0, pointerType = "mouse", isPrimary = true, button = MOUSEB_LEFT, x = x, y = y,
+    }))
 end
 
-local function Key(down, repeatKey, keyCode)
+local function KeyDown(repeatKey, keyCode)
     local data = VariantMap()
     data["Key"] = Variant(keyCode or KEY_SPACE)
-    if down then
-        data["Repeat"] = Variant(repeatKey)
-        SendEvent("KeyDown", data)
-    else
-        SendEvent("KeyUp", data)
-    end
+    data["Repeat"] = Variant(repeatKey)
+    SendEvent("KeyDown", data)
+end
+
+local function KeyUp(keyCode)
+    local data = VariantMap()
+    data["Key"] = Variant(keyCode or KEY_SPACE)
+    SendEvent("KeyUp", data)
 end
 
 local function Tap(keyCode)
-    Key(true, false, keyCode)
-    Key(false, false, keyCode)
+    KeyDown(false, keyCode)
+    KeyUp(keyCode)
 end
 
-local function Pointer(down, kind, button, targetId)
-    local action = UI.FindById(targetId or "demoAction")
+-- 在确认区上模拟一次指针事件，用于验证右键过滤与触屏路径。
+local function Pointer(down, kind, button)
+    local action = UI.FindById("demoAction")
     assert(action, "没有确认区")
     UI.Layout()
     local layout = action:GetAbsoluteLayout()
@@ -76,127 +101,148 @@ local function Focus(active)
     SendEvent("InputFocus", data)
 end
 
-function Start()
-    GameStart()
-    require("tests.FirstStep").Run()
-    SubscribeToEvent("PostUpdate", "HandleIntegrationTest")
+local function InLanding()
+    return Text("phaseLabel"):find("第 1 轮", 1, true) ~= nil
 end
 
-function HandleIntegrationTest()
-    steps = steps + 1
-    if steps == 10 then
-        UI.Layout()
-        Check(Phase() == PHASE_LANDING, "启动进入第 1 轮")
+local function InForce()
+    return Text("phaseLabel"):find("第 2 轮", 1, true) ~= nil
+end
+
+local function Chance()
+    return Text("cockpitChance")
+end
+
+local function ChanceCount()
+    return tonumber(Chance():match("(%d+)%s*/"))
+end
+
+---@param desc string
+---@param run fun(): boolean
+local function Step(desc, run)
+    steps[#steps + 1] = { desc = desc, run = run }
+end
+
+local function BuildSteps()
+    Step("进入驾驶舱", function()
+        if Has("menuStart") then Click("menuStart") return false end
+        if Has("prepConfirm") then Click("prepConfirm") return false end
+        return Has("cockpitChance")
+    end)
+    Step("开局为落点轮且机会 0/3", function()
+        Check(InLanding(), "开局为落点轮")
+        Check(ChanceCount() == 0, "开局机会 0/3")
+        return true
+    end)
+    Step("正式流程不显示测试中换鞋", function()
+        local shoeRow = UI.FindById("shoeRow")
+        Check(shoeRow == nil or not shoeRow:IsVisible(), "正式流程不显示测试中换鞋")
+        return true
+    end)
+    Step("右键不能确认", function()
         Pointer(true, "mouse", MOUSEB_RIGHT)
-        Check(Text("demoReading") == "停点  —", "右键不能确认")
+        Check(InLanding() and Text("demoReading") == "停点  —", "右键不能确认")
         Pointer(false, "mouse", MOUSEB_RIGHT)
+        return true
+    end)
+    Step("左键一次确认进入力度轮", function()
         Pointer(true, "mouse", MOUSEB_LEFT)
-        Check(Text("demoReading") ~= "停点  —", "鼠标按下锁定落点")
-        lockedText = Text("demoReading")
-        Key(true, false)
-        Check(Text("demoReading") == lockedText, "同帧鼠标加键盘只处理一次")
-    elseif steps == 11 then
+        Check(InForce(), "左键一次确认进入力度轮")
+        Check(ChanceCount() == 0, "落点确认本身不占用机会")
+        return true
+    end)
+    Step("鼠标抬起不重复推进", function()
         Pointer(false, "mouse", MOUSEB_LEFT)
-        Check(Text("demoReading") == lockedText, "鼠标抬起不重复处理")
-        Key(true, true)
-        Check(Text("demoReading") == lockedText, "长按Repeat不重复处理")
-        Key(false, false)
-    elseif steps == 12 then
-        Tap(KEY_RIGHT)
-        Check(Text("demoReading") ~= lockedText, "锁定后同点换鞋改变真实面积")
-        Check(Text("demoReading"):find("受力重心", 1, true) ~= nil, "显示受力重心读数")
-        Check(Text("demoReading"):find("A有效", 1, true) ~= nil, "显示联合面积读数")
-    elseif steps == 13 then
-        Tap(KEY_LEFT)
-        Check(Text("demoReading") == lockedText, "换回原鞋复现同一落点面积")
-    elseif steps == 14 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_FORCE, "第二次确认进入第 2 轮")
-        Check(Text("demoReading"):find("力度", 1, true) ~= nil, "第 2 轮显示力度读数")
-    elseif steps == 15 then
-        Check(ShoeDisabled("shoe2"), "第 2 轮鞋型按钮不可用")
-        Tap(KEY_RIGHT)
-        Check(Phase() == PHASE_FORCE, "第 2 轮不接受换鞋")
-    elseif steps == 16 then
+        Check(InForce(), "鼠标抬起不重复推进")
+        return true
+    end)
+    -- 同帧去重：同一帧内先触屏锁定力度，再按键盘；第二次必须被 ActionGate 拒绝。
+    Step("同帧触屏加键盘只结算一次", function()
         Pointer(true, "touch", MOUSEB_LEFT)
-        Check(Phase() == PHASE_DONE, "触屏完成第 2 轮")
-        lockedText = Text("demoReading")
-        Check(lockedText:find("踩踏力度 F", 1, true) ~= nil, "锁定后给出牛顿力度")
-        Check(lockedText:find("甜蜜区宽度", 1, true) ~= nil, "锁定后给出甜蜜区宽度")
-    elseif steps == 17 then
+        Check(ChanceCount() == 1, "触屏锁定力度结算一次")
+        KeyDown(false)
+        Check(ChanceCount() == 1, "同帧键盘没有重复结算")
+        KeyUp()
         Pointer(false, "touch", MOUSEB_LEFT)
-        Check(Phase() == PHASE_DONE, "触屏抬起不重复推进")
-    elseif steps == 18 then
-        Check(ShoeDisabled("shoe2"), "结束态鞋型按钮不可用")
-        Tap(KEY_RIGHT)
-        Check(Text("demoReading") == lockedText, "结束态不接受换鞋")
-    elseif steps == 20 then
-        Pointer(true, "touch", MOUSEB_LEFT)
-        Check(Phase() == PHASE_LANDING, "结束态再确认开始下一次测量")
-        -- 新一轮刚开跑，鞋型按钮应当因为"移动中"而禁用，等按停后才恢复。
-        Check(ShoeDisabled("shoe2"), "新一轮移动中鞋型按钮禁用")
-    elseif steps == 21 then
-        Pointer(false, "touch", MOUSEB_LEFT)
-    elseif steps == 22 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_LANDING and not ShoeDisabled("shoe2"), "按停后鞋型按钮重新可用")
-    elseif steps == 23 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_FORCE, "再确认进入第 2 轮")
-    elseif steps == 24 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_DONE, "完成第 2 轮回到结束态")
-    elseif steps == 25 then
+        return true
+    end)
+    Step("结算后回到落点轮", function()
+        Check(InLanding(), "结算后回到落点轮")
+        Check(ChanceCount() == 1, "完成一次后机会 1/3")
+        return true
+    end)
+    Step("长按 Repeat 不重复结算", function()
+        -- 落点轮里长按不应因为 Repeat 而推进两次。
+        KeyDown(true)
+        Check(InLanding(), "长按 Repeat 不推进")
+        KeyUp()
+        return true
+    end)
+    Step("失焦进入暂停", function()
         Focus(false)
-        local cursor = UI.FindById("demoCursor")
-        assert(cursor)
-        UI.Layout()
-        pausedLeft = cursor:GetLayout().x
-        pausedLastFrame = time:GetFrameNumber()
-        Check(Text("demoCaption"):find("暂停", 1, true) ~= nil, "失焦进入暂停")
-    elseif steps == 29 then
-        local cursor = UI.FindById("demoCursor")
-        assert(cursor)
-        UI.Layout()
-        Check(math.abs(cursor:GetLayout().x - pausedLeft) < 0.001, "暂停后游标不移动")
+        return Text("demoCaption"):find("暂停", 1, true) ~= nil
+    end)
+    Step("暂停期间不响应确认", function()
+        Tap(KEY_SPACE)
+        Check(InLanding(), "暂停期间不响应确认")
+        Check(ChanceCount() == 1, "暂停期间机会不变")
+        return true
+    end)
+    Step("恢复后仍可继续", function()
         Focus(true)
-    elseif steps == 31 then
-        Check(time:GetFrameNumber() > pausedLastFrame, "暂停期间引擎仍推进验证帧")
-        Check(Phase() == PHASE_DONE, "恢复后回到原状态")
+        return InLanding()
+    end)
+    -- 落点确认与力度确认必须在不同帧：它们各自占一次 ActionGate 帧号。
+    Step("第 2 次落点确认", function()
+        if not InLanding() then return false end
         Tap(KEY_SPACE)
-        Check(Phase() == PHASE_LANDING, "恢复后可以重新开始测量")
-    elseif steps == 32 then
+        return InForce()
+    end)
+    Step("第 2 次力度结算", function()
         Tap(KEY_SPACE)
-        Check(Text("demoReading") ~= "停点  —", "恢复后可以按停")
-    elseif steps == 33 then
+        if not InLanding() then return false end
+        Check(ChanceCount() == 2, "完成第 2 次后机会 2/3")
+        return true
+    end)
+    Step("第 3 次落点确认", function()
+        if not InLanding() then return false end
         Tap(KEY_SPACE)
-        Check(Phase() == PHASE_FORCE, "恢复后可进入第 2 轮")
-    elseif steps == 34 then
+        return InForce()
+    end)
+    Step("第 3 次力度结算后必须发帖", function()
         Tap(KEY_SPACE)
-        Check(Phase() == PHASE_DONE, "恢复后可完成第 2 轮")
-        lockedText = Text("demoReading")
-    elseif steps == 35 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_LANDING, "再次开始新测量")
-    elseif steps == 36 then
-        Tap(KEY_SPACE)
-        Check(Text("demoReading") ~= "停点  —", "第 1 轮再次按停")
-    elseif steps == 37 then
-        Tap(KEY_RIGHT)
-        Check(Phase() == PHASE_LANDING, "第 1 轮锁定后仍可换鞋")
-    elseif steps == 38 then
-        Tap(KEY_SPACE)
-        Check(Phase() == PHASE_FORCE, "换鞋后进入第 2 轮")
-    elseif steps == 39 then
-        Pointer(true, "touch", MOUSEB_LEFT)
-        Check(Phase() == PHASE_DONE, "触屏完成第 2 轮")
-        -- 两端饱和区里不同停点可以给出同一个截断力度，因此这里验证力度合法而非必然不同。
-        local fresh = Text("demoReading")
-        Check(fresh ~= "", "新一次测量给出力度读数")
-        local f = tonumber(fresh:match("踩踏力度 F%s+([%d%.]+)"))
-        Check(f ~= nil and f >= 80 and f <= 1612, "新一次测量的力度落在 80～1612 N")
-        Pointer(false, "touch", MOUSEB_LEFT)
-        print(string.format("[集成验证] %s，断言=%d 失败=%d",
-            failures == 0 and "PASS" or "FAIL", checks, failures))
+        return Has("noticeBack")
+    end)
+    Step("发帖出口已离开驾驶舱", function()
+        Check(not Has("cockpitChance"), "发帖出口已离开驾驶舱")
+        return true
+    end)
+end
+
+function Start()
+    GameStart()
+    BuildSteps()
+    SubscribeToEvent("PostUpdate", "HandleDetailTest")
+end
+
+function HandleDetailTest()
+    local step = steps[stepIndex + 1]
+    if not step then return end
+    if step.run() then
+        stepIndex = stepIndex + 1
+        waited = 0
+    else
+        waited = waited + 1
+        if waited >= STEP_TIMEOUT then
+            Check(false, step.desc .. "（等待超时）")
+            print(string.format("[集成验证] 超时 步骤=%d/%d 描述=%s 阶段=%s 机会=%s",
+                stepIndex + 1, #steps, step.desc, Text("phaseLabel"), Chance()))
+            stepIndex = stepIndex + 1
+            waited = 0
+        end
+    end
+    if stepIndex >= #steps then
+        print(string.format("[集成验证] %s，断言=%d 失败=%d 步骤=%d",
+            failures == 0 and "PASS" or "FAIL", checks, failures, stepIndex))
     end
 end
