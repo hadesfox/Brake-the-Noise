@@ -40,16 +40,26 @@
 ---@field shoeCoverage number
 ---@field pedalCoverage number
 ---@field intersections LandingRect[] 归一化场景坐标，不是鞋中心的相对坐标
+---@field hasContact boolean 是否有真实接触；零接触时下面两个重心为空
+---@field centroidX number? 真实交集面积重心，受力位置；零接触为空
+---@field centroidY number?
+---@field shoeCentroidX number? 鞋底几何中心，玩家操作落点；零接触为空
+---@field shoeCentroidY number?
 
 ---@class LandingRecord
----@field x number
+---@field x number 鞋中心，玩家操作落点
 ---@field y number
 ---@field shoeId string
 ---@field area number
 ---@field shoeArea number
 ---@field pedalArea number
----@field shoeCoverage number
----@field pedalCoverage number
+---@field shoeCoverage number 交集面积 / 鞋底总面积，传导效率输入
+---@field pedalCoverage number 交集面积 / 踏板面积，载荷集中输入
+---@field hasContact boolean
+---@field centroidX number? 受力重心，与鞋中心分开记录
+---@field centroidY number?
+---@field shoeCentroidX number? 鞋底几何中心
+---@field shoeCentroidY number?
 ---@field elapsed number 当前测量的有效运动时间，不含暂停和历史测量
 ---@field seed number 初始种子，不是已推进的 LCG 状态
 ---@field source string
@@ -202,6 +212,48 @@ local function Coverage(area, total)
     return math.max(0, math.min(1, area / total))
 end
 
+-- 受力重心：Σ(交集块面积 × 块中心) / 总交集面积，只按真实交集加权。
+-- 分段鞋底的缺口与包围盒不参与，所以小鞋底充分踩中与大鞋底一角踩中不会得到同一重心。
+---@param intersections LandingRect[]
+---@param area number
+---@return number? centroidX
+---@return number? centroidY
+local function ContactCentroid(intersections, area)
+    if area <= 0 then return nil, nil end
+    local sumX = 0.0
+    local sumY = 0.0
+    for _, block in ipairs(intersections) do
+        local weight = block.w * block.h
+        sumX = sumX + weight * (block.x + block.w / 2)
+        sumY = sumY + weight * (block.y + block.h / 2)
+    end
+    assert(IsFinite(sumX) and IsFinite(sumY), "交集加权重心溢出")
+    return sumX / area, sumY / area
+end
+
+-- 鞋底几何中心：只按真实鞋块的面积加权，不含鞋底缺口。
+---@param shoe LandingShoe
+---@param x number
+---@param y number
+---@return number? centroidX
+---@return number? centroidY
+local function ShoeCentroid(shoe, x, y)
+    local total = 0.0
+    local sumX = 0.0
+    local sumY = 0.0
+    for _, part in ipairs(shoe.parts) do
+        local weight = part.w * part.h
+        if weight > 0 then
+            total = total + weight
+            sumX = sumX + weight * (x + part.x + part.w / 2)
+            sumY = sumY + weight * (y + part.y + part.h / 2)
+        end
+    end
+    if total <= 0 then return nil, nil end
+    assert(IsFinite(sumX) and IsFinite(sumY), "鞋底加权中心溢出")
+    return sumX / total, sumY / total
+end
+
 -- Contact 允许零尺寸/空 parts 作为退化几何（比例均安全为零）；Create 拒绝此类配置。
 ---@param pedal LandingRect
 ---@param shoe LandingShoe
@@ -234,9 +286,13 @@ function Landing.Contact(pedal, shoe, x, y)
     end
     assert(IsFinite(shoeArea) and IsFinite(area), "鞋底累计面积溢出")
     local pedalArea = pedal.w * pedal.h
+    local centroidX, centroidY = ContactCentroid(intersections, area)
+    local shoeCentroidX, shoeCentroidY = ShoeCentroid(shoe, x, y)
     return { area = area, shoeArea = shoeArea, pedalArea = pedalArea,
         shoeCoverage = Coverage(area, shoeArea), pedalCoverage = Coverage(area, pedalArea),
-        intersections = intersections }
+        intersections = intersections, hasContact = area > 0,
+        centroidX = centroidX, centroidY = centroidY,
+        shoeCentroidX = shoeCentroidX, shoeCentroidY = shoeCentroidY }
 end
 
 ---@param record LandingRecord
@@ -245,6 +301,8 @@ local function CopyRecord(record)
     return { x = record.x, y = record.y, shoeId = record.shoeId,
         area = record.area, shoeArea = record.shoeArea, pedalArea = record.pedalArea,
         shoeCoverage = record.shoeCoverage, pedalCoverage = record.pedalCoverage,
+        hasContact = record.hasContact, centroidX = record.centroidX, centroidY = record.centroidY,
+        shoeCentroidX = record.shoeCentroidX, shoeCentroidY = record.shoeCentroidY,
         elapsed = record.elapsed, seed = record.seed, source = record.source }
 end
 
@@ -360,6 +418,8 @@ function Landing:Lock(source)
     local record = { x = self.x, y = self.y, shoeId = shoe.id,
         area = contact.area, shoeArea = contact.shoeArea, pedalArea = contact.pedalArea,
         shoeCoverage = contact.shoeCoverage, pedalCoverage = contact.pedalCoverage,
+        hasContact = contact.hasContact, centroidX = contact.centroidX, centroidY = contact.centroidY,
+        shoeCentroidX = contact.shoeCentroidX, shoeCentroidY = contact.shoeCentroidY,
         elapsed = self.elapsed, seed = self.seed, source = source or "unknown" }
     self.moving = false
     self.previousX, self.previousY = self.x, self.y

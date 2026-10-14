@@ -1,6 +1,13 @@
--- 仅供 P1.1～P1.3 开发验证；几何占位和种子不是正式鞋型、暗变量或系数配置。
+-- 仅供 P1.1～P1.3 开发验证；几何占位和种子不是正式鞋型、隐藏状态来源或映射参数。
+--
+-- 已由作者确认、可直接沿用的口径（不属占位）：
+--   · 力度 F 范围 80～1612 N，超出上限截断。
+--   · 甜蜜区中心基准 0.50，最大漂移 ±0.18（全条 ±18 个百分点）。
+--   · 甜蜜区全宽 0.10～0.04（半宽 0.05～0.02），仅暴躁收窄。
+--   · 疲劳减力、疲劳与暴躁共同参与漂移、连续渐变、两端为本状态最高力度。
+-- 其余映射强度、曲线形状与抖动/变速幅度仍是开发占位值，正式数值待作者提供。
 return {
-    version = "force-demo-3",
+    version = "force-demo-4",
     title = "舆论刹车",
     sweep = {
         unitsPerSecond = 0.75, -- 已获作者确认的 P1.1 手感速度，归一化距离/秒。
@@ -26,21 +33,42 @@ return {
             } },
         },
     },
-    -- 开发用心理曲线：只验证"两端大中间小 + 低平区宽度/上移/漂移/抖动"是否成立。
-    -- 低平区、陡峭度、甜蜜点漂移和暴躁/疲劳影响强度均为占位值，正式数值待作者提供。
+    -- 杆端支点与力臂映射。支点位置是几何示意占位；refDistance/minArm/maxArm 待作者给值。
+    lever = {
+        pivotX = 0.5,
+        pivotY = 0.06,
+        refDistance = 0.4,
+        minArm = 0.5,
+        maxArm = 1.8,
+    },
+    -- 面积联合结构 A有效=A集中(r踏板)×E传导(r鞋底) 已确认；范围与曲线仍是占位值。
+    contact = {
+        concentrateMin = 1.0,
+        concentrateMax = 2.6,
+        concentrateCurve = 1.4,
+        conductionFloor = 0.15,
+        conductionFull = 1.0,
+        conductionCurve = 0.9,
+        conductionSoftStart = 0.25,
+    },
+    -- 开发用心理曲线：只验证"两端大中间小 + 仅暴躁收窄 + 疲劳减力 + 合成漂移"是否成立。
     force = {
         cursorSpeed = 0.62,
-        flatHalfBase = 0.10,
-        flatLevel = 0.12,
-        peakLift = 0.70,
+        intentLow = 120,
+        intentHigh = 1600,
+        forceMin = 80,
+        forceMax = 1612,
         rampWidth = 0.34,
         steepBase = 1.6,
         steepAgitation = 2.4,
-        flatNarrow = 0.62,
-        widenFatigue = 0.45,
-        liftFatigue = 0.16,
         sweetBase = 0.5,
-        sweetDrift = 0.18,
+        sweetDriftMax = 0.18,
+        agitationDriftWeight = 1.0,
+        fatigueDriftWeight = 0.6,
+        sweetHalfMax = 0.05,
+        sweetHalfMin = 0.02,
+        sweetNarrowAgitation = 0.6,
+        fatigueForceCut = 0.35,
         jitterAmp = 0.035,
         jitterFreq1 = 5.5,
         jitterFreq2 = 13.0,

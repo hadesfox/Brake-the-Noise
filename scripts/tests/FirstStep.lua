@@ -42,8 +42,12 @@ function Tests.Run()
     gate:ClearHeld()
     check(gate:Press(1, false), "失焦清除按键闩锁")
     check(#Parameters.Check(GameConfig, "testing") > 0, "待填正式参数不能通过")
-    check(#Parameters.Check(GameConfig, "hidden") > 0, "八个暗变量不可自拟")
+    -- 旧八项 k1～k8 强制连乘已取消，改按职责分组；最终 K 仅为姿势。
+    check(#Parameters.Check(GameConfig, "human") > 0, "人体状态参数不可自拟")
+    check(#Parameters.Check(GameConfig, "component") > 0, "部件余量与温度参数不可自拟")
     check(#Parameters.Check(GameConfig, "posting") > 0, "发帖参数未填显式阻塞")
+    local unknownRejected = not pcall(Parameters.Check, GameConfig, "hidden")
+    check(unknownRejected, "旧 hidden 分组不再作为有效分组")
     print("[首步验证] PASS，断言数=" .. count)
     return count
 end

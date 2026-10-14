@@ -1,17 +1,28 @@
 -- 参数校验只检查作者已给的结构，不计算或补造缺失值。
+-- 按计划第 4.1 节 E 小节：旧的八项 k1～k8 强制连乘已取消，最终 K 仅为姿势。
+-- 因此这里按职责分组，不再要求八项全部提供。
 local Parameters = {}
 
 local REQUIRED = {
     testing = {
-        "explicit.L", "explicit.A", "explicit.F", "sweep", "shoes",
-        "psychology.agitation", "psychology.fatigue",
+        "explicit.L", "explicit.A", "explicit.F", "explicit.K",
+        "landing.shoes", "landing.speed", "landing.habitWeight",
     },
-    hidden = {
-        "hidden.k1", "hidden.k2", "hidden.k3", "hidden.k4",
-        "hidden.k5", "hidden.k6", "hidden.k7", "hidden.k8",
-        "threshold", "braking",
+    human = {
+        "human.fatigue", "human.agitation", "human.temperature",
+    },
+    component = {
+        "component.durability", "component.temperatureTolerance",
+        "brake",
     },
     posting = { "tokens", "spread" },
+}
+
+-- 需要 { min, max } 正数范围的组；其余待填项只检查非空 table。
+local RANGED = {
+    testing = true,
+    human = true,
+    component = true,
 }
 
 ---@param config table
@@ -43,11 +54,14 @@ function Parameters.Check(config, group)
         local value = readPath(config, path)
         if type(value) ~= "table" or next(value) == nil then
             issues[#issues + 1] = "待作者提供：" .. path
-        elseif path:match("^explicit%.") or path:match("^hidden%.") then
-            if type(value.min) ~= "number" or type(value.max) ~= "number"
-                or value.min ~= value.min or value.max ~= value.max
-                or value.min <= 0 or value.max < value.min or value.max == math.huge then
-                issues[#issues + 1] = "无效范围：" .. path .. "（需有限正数 min <= max）"
+        elseif RANGED[group] then
+            -- 只对显式给了 min/max 的项做范围检查；未给范围的子项交由作者补。
+            if type(value.min) == "number" or type(value.max) == "number" then
+                if type(value.min) ~= "number" or type(value.max) ~= "number"
+                    or value.min ~= value.min or value.max ~= value.max
+                    or value.min <= 0 or value.max < value.min or value.max == math.huge then
+                    issues[#issues + 1] = "无效范围：" .. path .. "（需有限正数 min <= max）"
+                end
             end
         end
     end

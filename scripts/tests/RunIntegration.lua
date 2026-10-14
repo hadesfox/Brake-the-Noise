@@ -104,7 +104,8 @@ function HandleIntegrationTest()
     elseif steps == 12 then
         Tap(KEY_RIGHT)
         Check(Text("demoReading") ~= lockedText, "锁定后同点换鞋改变真实面积")
-        Check(Text("demoReading"):find("接触面积", 1, true) ~= nil, "显示接触几何读数")
+        Check(Text("demoReading"):find("受力重心", 1, true) ~= nil, "显示受力重心读数")
+        Check(Text("demoReading"):find("A有效", 1, true) ~= nil, "显示联合面积读数")
     elseif steps == 13 then
         Tap(KEY_LEFT)
         Check(Text("demoReading") == lockedText, "换回原鞋复现同一落点面积")
@@ -120,7 +121,8 @@ function HandleIntegrationTest()
         Pointer(true, "touch", MOUSEB_LEFT)
         Check(Phase() == PHASE_DONE, "触屏完成第 2 轮")
         lockedText = Text("demoReading")
-        Check(lockedText:find("甜蜜点", 1, true) ~= nil, "锁定后给出甜蜜点与低平区")
+        Check(lockedText:find("踩踏力度 F", 1, true) ~= nil, "锁定后给出牛顿力度")
+        Check(lockedText:find("甜蜜区宽度", 1, true) ~= nil, "锁定后给出甜蜜区宽度")
     elseif steps == 17 then
         Pointer(false, "touch", MOUSEB_LEFT)
         Check(Phase() == PHASE_DONE, "触屏抬起不重复推进")
@@ -188,7 +190,11 @@ function HandleIntegrationTest()
     elseif steps == 39 then
         Pointer(true, "touch", MOUSEB_LEFT)
         Check(Phase() == PHASE_DONE, "触屏完成第 2 轮")
-        Check(Text("demoReading") ~= lockedText, "新一次测量给出新力度")
+        -- 两端饱和区里不同停点可以给出同一个截断力度，因此这里验证力度合法而非必然不同。
+        local fresh = Text("demoReading")
+        Check(fresh ~= "", "新一次测量给出力度读数")
+        local f = tonumber(fresh:match("踩踏力度 F%s+([%d%.]+)"))
+        Check(f ~= nil and f >= 80 and f <= 1612, "新一次测量的力度落在 80～1612 N")
         Pointer(false, "touch", MOUSEB_LEFT)
         print(string.format("[集成验证] %s，断言=%d 失败=%d",
             failures == 0 and "PASS" or "FAIL", checks, failures))

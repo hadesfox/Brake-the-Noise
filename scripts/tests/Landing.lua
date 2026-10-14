@@ -43,6 +43,8 @@ local function SameRecord(a, b)
     return a.x == b.x and a.y == b.y and a.shoeId == b.shoeId
         and a.area == b.area and a.shoeArea == b.shoeArea and a.pedalArea == b.pedalArea
         and a.shoeCoverage == b.shoeCoverage and a.pedalCoverage == b.pedalCoverage
+        and a.hasContact == b.hasContact and a.centroidX == b.centroidX and a.centroidY == b.centroidY
+        and a.shoeCentroidX == b.shoeCentroidX and a.shoeCentroidY == b.shoeCentroidY
         and a.elapsed == b.elapsed and a.seed == b.seed and a.source == b.source
 end
 
@@ -104,6 +106,34 @@ function Tests.Run()
     local tiny = Landing.Contact(pedal, shoe, 1 - 0.00000001, 0.5)
     Check(tiny.area > 0 and tiny.shoeCoverage > 0, "真正微小重叠不按擦边吞掉")
 
+    -- 受力重心：真实交集面积重心，与鞋中心分开；零接触不给重心，也不除以零。
+    Check(full.hasContact and Near(assert(full.centroidX), 0.5) and Near(assert(full.centroidY), 0.5),
+        "完全重叠的受力重心在交集中心")
+    Check(Near(assert(half.centroidX), 0.625) and Near(assert(half.centroidY), 0.5),
+        "半重叠的受力重心落在真实交集里，不是鞋中心")
+    Check(assert(half.centroidX) ~= 0.75, "受力重心与鞋中心 0.75 分开记录")
+    Check(not edge.hasContact and edge.centroidX == nil and edge.centroidY == nil,
+        "共边零接触没有受力重心")
+    Check(not corner.hasContact and corner.centroidX == nil, "共角零接触没有受力重心")
+    Check(not none.hasContact and none.centroidX == nil and none.centroidY == nil,
+        "完全无接触没有受力重心")
+    Check(not degenerate.hasContact and degenerate.centroidX == nil, "零踏板面积不给受力重心")
+    Check(not empty.hasContact and empty.centroidX == nil, "空鞋底不给受力重心")
+    Check(not zero.hasContact and zero.centroidX == nil, "零尺寸鞋块不给受力重心")
+    -- 分块鞋：重心按各交集块面积加权，缺口不参与。
+    Check(split.hasContact and #split.intersections == 2, "分块鞋有两块交集")
+    Check(Near(assert(split.centroidX), 0.5) and Near(assert(split.centroidY), 0.5),
+        "分块鞋重心按面积加权")
+    local lopsided = Landing.Contact(pedal, shoe, 0.5 - 0.1, 0.5)
+    Check(lopsided.hasContact and (lopsided.centroidX or 1) < 0.5,
+        "偏心落点把受力重心拉向真实交集一侧")
+    Check(full.shoeCentroidX ~= nil and Near(full.shoeCentroidX, 0.5)
+        and full.shoeCentroidY ~= nil and Near(full.shoeCentroidY, 0.5),
+        "鞋底几何中心与落点一致")
+    local splitCentroid = Landing.Contact(pedal, config.shoes[2], 0.5, 0.5)
+    Check(Near(assert(splitCentroid.shoeCentroidX), 0.5) and Near(assert(splitCentroid.shoeCentroidY), 0.5),
+        "分块鞋鞋底中心按真实鞋块加权，不含缺口")
+
     local large, small = Landing.Create(Fixture(), 42), Landing.Create(Fixture(), 42)
     Check(large.moving and large.shoeIndex == 1 and large.elapsed == 0 and #large.records == 0,
         "Create 初始化运动，不创建假记录")
@@ -161,6 +191,9 @@ function Tests.Run()
     Check(record.area == expected.area and record.shoeArea == expected.shoeArea
         and record.pedalArea == expected.pedalArea and record.shoeCoverage == expected.shoeCoverage
         and record.pedalCoverage == expected.pedalCoverage, "记录所有几何数据真实计算")
+    Check(record.hasContact == expected.hasContact and record.centroidX == expected.centroidX
+        and record.centroidY == expected.centroidY and record.shoeCentroidX == expected.shoeCentroidX
+        and record.shoeCentroidY == expected.shoeCentroidY, "记录受力重心与鞋中心真实计算")
     Check(moving.previousX == record.x and moving.previousY == record.y, "Lock 保存上次落点")
     moving:Update(100)
     Check(moving.x == record.x and moving.y == record.y and moving.elapsed == record.elapsed,

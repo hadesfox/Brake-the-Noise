@@ -1,17 +1,38 @@
 -- 三幕交接的数据契约。这里只定义事实来源，不提前实现未开工的玩法。
+--
+-- 记录口径（计划第 4.1 节）：鞋中心是玩家操作落点，受力重心是真实交集面积重心，
+-- 两者分开保存；意图力度、实际踩踏力度、接触效率与最终载荷也分开保存，
+-- 这样档案能说明"想踩多重、实际踩多重、传过去多少"，而不把接触损失覆写成踩轻了。
+
 ---@class BrakeFactorRecord
 ---@field name string
 ---@field value number
----@field source string
+---@field source string 因果来源标识，例如 fatigue / agitation / temperature / posture
+
+---@class BrakeContactRecord
+---@field pedalCoverage number 交集面积 / 踏板面积，A集中 输入
+---@field shoeCoverage number 交集面积 / 鞋底总面积，E传导 输入
+---@field concentrate number A集中
+---@field conduction number E传导
+---@field effectiveArea number A有效 = A集中 × E传导
 
 ---@class BrakeTestRecord
 ---@field testIndex integer
 ---@field vehicleIndex integer
 ---@field shoeId string
----@field landingX number
+---@field landingX number 鞋中心，玩家操作落点
+---@field landingY number
+---@field centroidX number? 受力重心，真实交集面积重心
+---@field centroidY number?
 ---@field overlapArea number
----@field peakF number
----@field torqueT number
+---@field leverArm number L：受力重心到杆端支点的力臂
+---@field contact BrakeContactRecord
+---@field intentF number 意图力度，牛顿
+---@field peakF number 实际踩踏力度 F，牛顿
+---@field postureK number 仅姿势的最终倍率
+---@field torqueT number 游戏等效破坏载荷
+---@field durabilityRemaining number M剩余
+---@field durabilityEffective number M有效 = M剩余 × C温度(θ)
 ---@field breakState string
 ---@field factors BrakeFactorRecord[]
 ---@field agitation number
@@ -42,4 +63,4 @@
 -- 第二幕 → 清算/传播：post 原文副本、方向、势能和 causalChain。
 -- 完成局 → 档案：整个 session；测试索引和车辆索引分别保存。
 -- 原文与历史记录一经提交不由演出层覆写；档案只接收 completed 的正式局。
-return { schemaVersion = 1 }
+return { schemaVersion = 2 }

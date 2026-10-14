@@ -1,5 +1,6 @@
 -- 《舆论刹车》开发入口，沿用标准 2D 脚手架的生命周期与新 UI 系统。
--- 当前运行 P1.3 两轮判定 Demo（落点/接触面 → 力度心理曲线）；正式三幕和数值规则尚未启用。
+-- 当前运行 P1.3f 新设计对齐 Demo（落点/受力重心 → 力度心理曲线）；
+-- 正式三幕、完整载荷结算与数值规则尚未启用。
 local UI = require("urhox-libs/UI")
 local DemoConfig = require("config.Demo")
 local GameConfig = require("config.Game")
@@ -7,6 +8,8 @@ local Parameters = require("core.Parameters")
 local Contracts = require("core.Contracts")
 local Landing = require("gameplay.Landing")
 local ForceCurve = require("gameplay.ForceCurve")
+local Lever = require("gameplay.Lever")
+local ContactMapping = require("gameplay.ContactMapping")
 local ActionGate = require("core.ActionGate")
 local BrakeTestDemo = require("ui.BrakeTestDemo")
 
@@ -42,8 +45,22 @@ local function Confirm(source)
         if landing.moving then
             local record = landing:Lock(source)
             if record then
-                print(string.format("[落点台] 落点鞋型=%s 停点=(%.6f,%.6f) 面积=%.6f 活跃时间=%.3f 来源=%s 配置=%s",
-                    record.shoeId, record.x, record.y, record.area, record.elapsed, source, DemoConfig.version))
+                local mapping = ContactMapping.Evaluate(DemoConfig.contact,
+                    record.pedalCoverage, record.shoeCoverage)
+                if record.hasContact and record.centroidX and record.centroidY then
+                    local arm = Lever.Arm(DemoConfig.lever, record.centroidX, record.centroidY)
+                    print(string.format(
+                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 受力重心=(%.6f,%.6f) L=%.4f 距离=%.4f 钳制=%s 面积=%.6f r踏板=%.4f r鞋底=%.4f A集中=%.4f E传导=%.4f A有效=%.4f 活跃时间=%.3f 来源=%s 配置=%s",
+                        record.shoeId, record.x, record.y, record.centroidX, record.centroidY,
+                        arm.l, arm.distance, tostring(arm.clamped), record.area,
+                        record.pedalCoverage, record.shoeCoverage,
+                        mapping.concentrate, mapping.conduction, mapping.effective,
+                        record.elapsed, source, DemoConfig.version))
+                else
+                    print(string.format(
+                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 踩空：无受力重心，不进入载荷计算 活跃时间=%.3f 来源=%s 配置=%s",
+                        record.shoeId, record.x, record.y, record.elapsed, source, DemoConfig.version))
+                end
             end
         else
             phase = BrakeTestDemo.PHASE_FORCE
@@ -54,9 +71,10 @@ local function Confirm(source)
         if record then
             attempt = attempt + 1
             print(string.format(
-                "[力度台] 测量=%d 力度=%.6f 停点=%.6f 甜蜜点=%.6f 低平区半宽=%.6f 陡峭=%.3f 暴躁=%.2f 疲劳=%.2f 活跃时间=%.3f 来源=%s 配置=%s",
-                attempt, record.force, record.x, record.sweetSpot, record.flatHalf, record.steepness,
-                record.agitation, record.fatigue, record.elapsed, source, DemoConfig.version))
+                "[力度台] 测量=%d F=%.1fN 意图=%.1fN 停点=%.6f 甜蜜中心=%.6f 甜蜜半宽=%.6f 陡峭=%.3f 暴躁=%.2f 疲劳=%.2f 活跃时间=%.3f 来源=%s 配置=%s",
+                attempt, record.force, record.intentForce, record.x, record.sweetCenter,
+                record.sweetHalf, record.steepness, record.agitation, record.fatigue,
+                record.elapsed, source, DemoConfig.version))
         end
         phase = BrakeTestDemo.PHASE_DONE
     end
@@ -85,7 +103,11 @@ function Start()
             bold = "Fonts/MiSans-Regular.ttf",
         } } },
     })
-    view = BrakeTestDemo.Create(DemoConfig.landing, Confirm, SelectShoe)
+    view = BrakeTestDemo.Create(DemoConfig.landing, {
+        lever = DemoConfig.lever,
+        contact = DemoConfig.contact,
+        showDebugState = true, -- 开发台显式打开隐藏状态读数；正式局必须关闭。
+    }, Confirm, SelectShoe)
     UI.SetRoot(view.root)
     UI.Layout()
     Refresh()
@@ -93,10 +115,12 @@ function Start()
     SubscribeToEvent("KeyDown", "HandleKeyDown")
     SubscribeToEvent("KeyUp", "HandleKeyUp")
     SubscribeToEvent("InputFocus", "HandleInputFocus")
-    local issues = Parameters.Check(GameConfig, "testing")
-    print("[舆论刹车] P1.3 两轮判定台启动，数据契约版本=" .. Contracts.schemaVersion)
-    print("[配置] 正式参数未启用；待补项目=" .. #issues .. "，仅运行开发几何与曲线 Demo")
-    for _, issue in ipairs(issues) do print("[配置] " .. issue) end
+    print("[舆论刹车] P1.3f 新设计对齐台启动，数据契约版本=" .. Contracts.schemaVersion)
+    for _, group in ipairs({ "testing", "human", "component" }) do
+        local issues = Parameters.Check(GameConfig, group)
+        print(string.format("[配置] 分组=%s 正式参数待补=%d 项，仅运行开发几何与曲线 Demo", group, #issues))
+        for _, issue in ipairs(issues) do print("[配置] " .. issue) end
+    end
 end
 
 function Stop()

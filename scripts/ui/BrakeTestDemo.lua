@@ -1,10 +1,20 @@
--- P1.3 开发界面：第一轮落点/接触面 → 第二轮力度心理曲线，共用同一个确认操作。
+-- P1.3f 开发界面：第一轮落点/接触面 → 第二轮力度心理曲线，共用同一个确认操作。
 -- 画面里的踏板、鞋底、交集矩形与算法使用同一组数据，避免图形与读数不符。
+--
+-- 隐藏状态可见范围：正式局内不得出现暴躁、疲劳、甜蜜区中心这类数字。
+-- 它们只在 showDebugState 打开的开发面板里出现，方便本地核对模型，不作为正式 HUD。
 local UI = require("urhox-libs/UI")
 local Landing = require("gameplay.Landing")
 local ForceCurve = require("gameplay.ForceCurve")
+local Lever = require("gameplay.Lever")
+local ContactMapping = require("gameplay.ContactMapping")
 local ForceCurveStrip = require("ui.ForceCurveStrip")
 local View = {}
+
+---@class BrakeTestDemoConfig
+---@field lever LeverConfig
+---@field contact ContactMappingConfig
+---@field showDebugState boolean 是否显示隐藏状态数字；正式局必须为 false
 
 ---@class BrakeTestDemoView
 ---@field root Widget
@@ -18,15 +28,21 @@ View.PHASE_FORCE = "force"
 View.PHASE_DONE = "done"
 
 ---@param config LandingConfig
+---@param demo BrakeTestDemoConfig
 ---@param onConfirm fun(source: string)
 ---@param onSelect fun(index: integer)
 ---@return BrakeTestDemoView
-function View.Create(config, onConfirm, onSelect)
+function View.Create(config, demo, onConfirm, onSelect)
     local phaseLabel = UI.Label { id = "phaseLabel", text = "第 1 轮 · 落点与接触面", fontSize = 12 }
     local caption = UI.Label { id = "demoCaption", text = "鞋底移动中", fontSize = 18 }
     local reading = UI.Label {
         id = "demoReading", text = "停点  —", fontSize = 14,
         width = "100%", whiteSpace = "normal",
+    }
+    -- 隐藏状态只在开发面板出现；正式局通过 showDebugState=false 关闭。
+    local debugReading = UI.Label {
+        id = "demoDebug", text = "", fontSize = 11,
+        width = "100%", whiteSpace = "normal", visible = demo.showDebugState,
     }
     local selectedLabel = UI.Label { text = "鞋型：宽底占位", fontSize = 13 }
     local actionText = UI.Label { text = "确认 · 按停", fontSize = 18 }
@@ -42,13 +58,28 @@ function View.Create(config, onConfirm, onSelect)
         id = "demoCursor", position = "absolute", width = 6, height = 6,
         borderRadius = 0, backgroundColor = { 230, 75, 70, 255 }, pointerEvents = "none",
     }
+    -- 受力重心：真实交集面积重心，和鞋中心红点分开显示。
+    local centroid = UI.Panel {
+        id = "demoCentroid", position = "absolute", width = 6, height = 6,
+        borderRadius = 0, backgroundColor = { 142, 68, 173, 255 },
+        pointerEvents = "none", visible = false,
+    }
+    -- 杆与支点：与 L 使用同一份归一化几何。
+    local leverArm = UI.Panel {
+        id = "demoLever", position = "absolute", borderRadius = 0,
+        backgroundColor = { 120, 132, 140, 220 }, pointerEvents = "none",
+    }
+    local pivot = UI.Panel {
+        id = "demoPivot", position = "absolute", width = 8, height = 8,
+        borderRadius = 0, backgroundColor = { 52, 73, 94, 255 }, pointerEvents = "none",
+    }
     ---@type Panel[]
     local shoePanels = {}
     ---@type Panel[]
     local contactPanels = {}
     local maxParts = 0
     for _, shoe in ipairs(config.shoes) do maxParts = math.max(maxParts, #shoe.parts) end
-    local boardChildren = { pedal }
+    local boardChildren = { pedal, leverArm, pivot }
     for i = 1, maxParts do
         local shoePart = UI.Panel {
             position = "absolute", borderRadius = 0,
@@ -64,6 +95,7 @@ function View.Create(config, onConfirm, onSelect)
         boardChildren[#boardChildren + 1] = contactPart
     end
     boardChildren[#boardChildren + 1] = center
+    boardChildren[#boardChildren + 1] = centroid
     local board = UI.Panel {
         id = "landingBoard", width = 280, height = 280, borderRadius = 0,
         backgroundColor = { 229, 236, 235, 255 }, overflow = "hidden",
@@ -75,7 +107,7 @@ function View.Create(config, onConfirm, onSelect)
             board,
             UI.Panel {
                 flexGrow = 1, flexShrink = 1, minWidth = 220, gap = 12,
-                children = { caption, selectedLabel, reading },
+                children = { caption, selectedLabel, reading, debugReading },
             },
         },
     }
@@ -85,10 +117,11 @@ function View.Create(config, onConfirm, onSelect)
         children = {
             strip,
             UI.Label {
-                text = "曲线两端大、中间小；低平区变窄或整体上移时，中间这次在哪要重新找。",
+                text = "曲线两端大、中间小；甜蜜区是最好控力的低力度段，命中不保证断裂。",
                 width = "100%", fontSize = 11, whiteSpace = "normal",
             },
             reading,
+            debugReading,
         },
     }
     ---@type Button[]
@@ -123,7 +156,7 @@ function View.Create(config, onConfirm, onSelect)
         width = "100%", maxWidth = 880, padding = 20, gap = 12,
         children = {
             UI.Label { text = "舆论刹车", fontSize = 24 },
-            UI.Label { text = "P1.3 / 两轮判定与心理曲线（开发版）", fontSize = 12 },
+            UI.Label { text = "P1.3f / 新设计对齐（开发版）", fontSize = 12 },
             phaseLabel,
             landingBox,
             forceBox,
@@ -131,7 +164,7 @@ function View.Create(config, onConfirm, onSelect)
             action,
             note,
             UI.Label {
-                text = "深灰：踏板 / 蓝绿：鞋底 / 金色：交集 / 红点：作用点 / 青带：低平区",
+                text = "深灰：踏板 / 蓝绿：鞋底 / 金色：交集 / 红点：鞋中心 / 紫点：受力重心 / 深蓝点：支点",
                 width = "100%", fontSize = 11, whiteSpace = "normal",
             },
             UI.Label {
@@ -177,10 +210,31 @@ function View.Create(config, onConfirm, onSelect)
             local layout = board:GetLayout()
             local size = math.min(layout.w, layout.h)
             local shoe = assert(config.shoes[landing.shoeIndex], "鞋型索引无效")
+            local pivotLeft = demo.lever.pivotX * size
+            local pivotTop = demo.lever.pivotY * size
+            pivot:SetStyle({ left = pivotLeft - 4, top = pivotTop - 4 })
             pedal:SetStyle({ left = config.pedal.x * size, top = config.pedal.y * size,
                 width = config.pedal.w * size, height = config.pedal.h * size })
             center:SetStyle({ left = landing.x * size - 3, top = landing.y * size - 3 })
             local contact = Landing.Contact(config.pedal, shoe, landing.x, landing.y)
+            -- 杆从支点连到受力重心；锁点前受力重心未知，杆先连到鞋中心。
+            local armTargetX = contact.centroidX or landing.x
+            local armTargetY = contact.centroidY or landing.y
+            local armX, armY = armTargetX * size, armTargetY * size
+            local deltaX, deltaY = armX - pivotLeft, armY - pivotTop
+            local armLength = math.sqrt(deltaX * deltaX + deltaY * deltaY)
+            leverArm:SetVisible(armLength > 0.001)
+            if armLength > 0.001 then
+                -- 杆的本地"向下"是 +Y；绕中心转到支点→受力重心方向。
+                leverArm:SetStyle({ left = (pivotLeft + armX) / 2 - 1,
+                    top = (pivotTop + armY) / 2 - armLength / 2, width = 2, height = armLength,
+                    rotate = math.deg(math.atan(-deltaX, deltaY)) })
+            end
+            centroid:SetVisible(contact.hasContact and not landing.moving)
+            if contact.hasContact and contact.centroidX and contact.centroidY then
+                centroid:SetStyle({ left = contact.centroidX * size - 3,
+                    top = contact.centroidY * size - 3 })
+            end
             for i = 1, maxParts do
                 local part = shoe.parts[i]
                 local shoePanel = assert(shoePanels[i])
@@ -205,24 +259,44 @@ function View.Create(config, onConfirm, onSelect)
             if landing.moving then
                 if reading:GetText() ~= "停点  —" then reading:SetText("停点  —") end
             else
-                local text = string.format(
-                    "停点  (%.3f, %.3f)\n接触面积  %.4f\n鞋底接触占比  %.1f%%\n踏板覆盖占比  %.1f%%",
-                    landing.x, landing.y, contact.area,
-                    contact.shoeCoverage * 100, contact.pedalCoverage * 100)
+                local mapping = ContactMapping.Evaluate(demo.contact,
+                    contact.pedalCoverage, contact.shoeCoverage)
+                local text
+                if contact.hasContact and contact.centroidX and contact.centroidY then
+                    local arm = Lever.Arm(demo.lever, contact.centroidX, contact.centroidY)
+                    text = string.format(
+                        "鞋中心  (%.3f, %.3f)\n受力重心  (%.3f, %.3f)\n力臂 L  %.4f\n接触面积  %.4f\n踏板覆盖  %.1f%% ｜ 鞋底接触  %.1f%%\nA集中  %.3f × E传导  %.3f = A有效  %.3f",
+                        landing.x, landing.y, contact.centroidX, contact.centroidY, arm.l,
+                        contact.area, contact.pedalCoverage * 100, contact.shoeCoverage * 100,
+                        mapping.concentrate, mapping.conduction, mapping.effective)
+                else
+                    text = "鞋中心  (%.3f, %.3f)\n踩空：没有受力重心，不进入载荷计算"
+                    text = string.format(text, landing.x, landing.y)
+                end
                 if reading:GetText() ~= text then reading:SetText(text) end
             end
+            debugReading:SetText(demo.showDebugState
+                and "开发：显示受力重心、L 与 A有效；正式局内不得出现隐藏状态数字。" or "")
         else
             phaseLabel:SetText(phase == View.PHASE_DONE and "本轮两轮判定已结束"
                 or "第 2 轮 · 力度")
             caption:SetText(force.moving and "力度游标移动中" or "力度已锁定")
             actionText:SetText(force.moving and "确认 · 按停" or "确认 · 开始下一次测量")
             self.lastState = force.moving and "moving" or "locked"
-            local level, flatHalf = ForceCurve.Evaluate(force.spec, force.x, force.sweetSpot,
-                force.agitation, force.fatigue)
+            local sweetHalf = ForceCurve.SweetHalf(force.spec, force.agitation)
             local text = string.format(
-                "力度  %.3f（开发归一化）\n甜蜜点  %.3f\n低平区半宽  %.3f\n暴躁  %.2f ｜ 疲劳  %.2f",
-                level, force.sweetSpot, flatHalf, force.agitation, force.fatigue)
+                "踩踏力度 F  %.1f N\n意图力度  %.1f N\n甜蜜区宽度  %.1f%%（半宽 %.3f）",
+                force.force, force.intentForce, sweetHalf * 200, sweetHalf)
             if reading:GetText() ~= text then reading:SetText(text) end
+            -- 隐藏状态只进开发面板，且仅当开关打开。
+            if demo.showDebugState then
+                local debugText = string.format(
+                    "开发：暴躁 %.2f ｜ 疲劳 %.2f ｜ 甜蜜区中心 %.3f ｜ 陡峭 %.2f",
+                    force.agitation, force.fatigue, force.sweetCenter, force.spec.steepBase)
+                if debugReading:GetText() ~= debugText then debugReading:SetText(debugText) end
+            else
+                if debugReading:GetText() ~= "" then debugReading:SetText("") end
+            end
         end
     end
 
