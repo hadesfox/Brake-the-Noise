@@ -1,170 +1,110 @@
--- ============================================================================
--- 舆论游戏 (Opinion Game)
--- 基于 templates/scaffold-2d.lua 脚手架
--- UI 系统: urhox-libs/UI (Yoga Flexbox + NanoVG)
--- ============================================================================
-
+-- 《舆论刹车》开发入口，沿用标准 2D 脚手架的生命周期与新 UI 系统。
+-- 当前仅运行 P1.1 手感 Demo；正式三幕规则尚未启用。
 local UI = require("urhox-libs/UI")
+local DemoConfig = require("config.Demo")
+local GameConfig = require("config.Game")
+local Parameters = require("core.Parameters")
+local Contracts = require("core.Contracts")
+local Sweep = require("core.Sweep")
+local ActionGate = require("core.ActionGate")
+local SweepDemo = require("ui.SweepDemo")
 
--- ============================================================================
--- 1. 全局变量声明
--- ============================================================================
----@type Widget?
-local uiRoot_ = nil
-local debugDraw_ = false
+local model = Sweep.Create(DemoConfig.sweep.unitsPerSecond, DemoConfig.sweep.initialPhase)
+local gate = ActionGate.Create()
+---@type table?
+local view = nil
+local paused = false
+local skipNextUpdate = false
+---@type integer
+local attempt = 0
 
-local CONFIG = {
-    Title = "舆论游戏",
-}
-
--- ============================================================================
--- 2. 生命周期函数
--- ============================================================================
+local function Confirm(source)
+    if paused or not view or not gate:Accept(time:GetFrameNumber()) then return end
+    -- 只处理输入前的一个状态，禁止同一确认既锁定又复位。
+    if model.moving then
+        local position = model:Lock()
+        attempt = attempt + 1
+        view:SetPosition(position)
+        view:ShowLocked(position, attempt, source)
+        print(string.format("[手感台] 测量=%d 停点=%.6f 活跃时间=%.3f 来源=%s 配置=%s",
+            attempt, position, model.elapsed, source, DemoConfig.version))
+    else
+        -- 从上个停点续测，避免每次复位到相同点影响手感观察。
+        model:Resume(model.phase)
+        view:ShowMoving()
+        print("[手感台] 开始下一次开发测量；不消耗正式游戏机会")
+    end
+end
 
 function Start()
-    graphics.windowTitle = CONFIG.Title
-
-    InitUI()
-    CreateGameContent()
-    CreateUI()
-    SubscribeToEvents()
-
-    print("=== Game Started: " .. CONFIG.Title .. " ===")
-end
-
-function Stop()
-    UI.Shutdown()
-end
-
--- ============================================================================
--- 3. 初始化辅助函数
--- ============================================================================
-
-function InitUI()
+    graphics.windowTitle = DemoConfig.title
+    input.mouseMode = MM_ABSOLUTE
+    input.mouseVisible = true
     UI.Init({
+        theme = "default-taptap",
+        scale = UI.Scale.DEFAULT,
         fonts = {
             { family = "sans", weights = {
                 normal = "Fonts/MiSans-Regular.ttf",
-            } }
+                bold = "Fonts/MiSans-Regular.ttf",
+            } },
         },
-        scale = UI.Scale.DEFAULT,
     })
-end
-
-function SubscribeToEvents()
+    view = SweepDemo.Create(Confirm)
+    UI.SetRoot(view.root)
     SubscribeToEvent("Update", "HandleUpdate")
     SubscribeToEvent("KeyDown", "HandleKeyDown")
+    SubscribeToEvent("KeyUp", "HandleKeyUp")
+    SubscribeToEvent("InputFocus", "HandleInputFocus")
+    local issues = Parameters.Check(GameConfig, "testing")
+    print("[舆论刹车] P1.1 开发手感台启动，数据契约版本=" .. Contracts.schemaVersion)
+    print("[配置] 正式参数未启用；待补项目=" .. #issues .. "，仅运行归一化 Demo")
+    for _, issue in ipairs(issues) do print("[配置] " .. issue) end
 end
 
--- ============================================================================
--- 4. 游戏逻辑 (AI 填充区域)
--- ============================================================================
-
-function CreateGameContent()
-    -- [TODO] 初始化舆论游戏状态：话题、玩家身份、舆论倾向值等
-    print("Creating game content...")
-end
-
-function CreateUI()
-    uiRoot_ = UI.Panel {
-        id = "gameUI",
-        width = "100%",
-        height = "100%",
-        children = {
-            CreatePlaceholderCard(),
-            CreateDebugPanel(),
-        }
-    }
-
-    UI.SetRoot(uiRoot_)
+function Stop()
+    UnsubscribeFromEvent("Update")
+    UnsubscribeFromEvent("KeyDown")
+    UnsubscribeFromEvent("KeyUp")
+    UnsubscribeFromEvent("InputFocus")
+    UI.Shutdown()
+    view = nil
+    gate:ClearHeld()
+    print("[舆论刹车] 手感台已清理")
 end
 
 ---@param eventType string
 ---@param eventData UpdateEventData
 function HandleUpdate(eventType, eventData)
-    local timeStep = eventData["TimeStep"]:GetFloat()
+    if paused or not view then return end
+    if skipNextUpdate then
+        skipNextUpdate = false
+        return
+    end
+    model:Update(eventData:GetFloat("TimeStep"))
+    view:SetPosition(model.position)
 end
 
 ---@param eventType string
 ---@param eventData KeyDownEventData
 function HandleKeyDown(eventType, eventData)
-    local key = eventData["Key"]:GetInt()
-
-    if key == KEY_Z then
-        debugDraw_ = not debugDraw_
-        if uiRoot_ then
-            local debugPanel = uiRoot_:FindById("debugPanel")
-            if debugPanel then
-                debugPanel:SetVisible(debugDraw_)
-            end
-        end
-    end
+    local key = eventData:GetInt("Key")
+    if key ~= KEY_SPACE and key ~= KEY_RETURN then return end
+    if gate:Press(key, eventData:GetBool("Repeat")) then Confirm("keyboard") end
 end
 
--- ============================================================================
--- 5. UI 构建辅助函数
--- ============================================================================
-
---- 脚手架占位卡片（正式开发时删除）
-function CreatePlaceholderCard()
-    return UI.Panel {
-        id = "placeholderCard",
-        position = "absolute",
-        top = 0,
-        left = 0,
-        right = 0,
-        bottom = 0,
-        justifyContent = "center",
-        alignItems = "center",
-        pointerEvents = "box-none",
-        children = {
-            UI.Panel {
-                width = "90%",
-                maxWidth = 360,
-                padding = 32,
-                gap = 12,
-                backgroundColor = { 30, 35, 50, 230 },
-                borderRadius = 16,
-                borderWidth = 1,
-                borderColor = { 80, 90, 120, 100 },
-                alignItems = "center",
-                overflow = "hidden",
-                pointerEvents = "auto",
-                children = {
-                    UI.Label {
-                        text = CONFIG.Title,
-                        fontSize = 20,
-                        fontColor = { 255, 255, 255, 255 },
-                    },
-                    UI.Label {
-                        text = "项目脚手架已就绪",
-                        fontSize = 12,
-                        fontColor = { 140, 160, 200, 180 },
-                    },
-                }
-            }
-        }
-    }
+---@param eventType string
+---@param eventData KeyUpEventData
+function HandleKeyUp(eventType, eventData)
+    gate:Release(eventData:GetInt("Key"))
 end
 
---- 调试信息面板（按 Z 切换）
-function CreateDebugPanel()
-    return UI.Panel {
-        id = "debugPanel",
-        visible = false,
-        position = "absolute",
-        top = 10,
-        left = 10,
-        padding = 8,
-        backgroundColor = { 0, 0, 0, 160 },
-        borderRadius = 4,
-        pointerEvents = "none",
-        children = {
-            UI.Label {
-                text = "Debug Mode: ON",
-                fontSize = 12,
-                fontColor = { 255, 255, 255, 255 },
-            },
-        }
-    }
+---@param eventType string
+---@param eventData InputFocusEventData
+function HandleInputFocus(eventType, eventData)
+    paused = not eventData:GetBool("Focus") or eventData:GetBool("Minimized")
+    gate:ClearHeld()
+    skipNextUpdate = not paused
+    if view then view:ShowPaused(paused) end
+    print("[手感台] 焦点状态=" .. (paused and "暂停" or "恢复"))
 end
