@@ -1,0 +1,241 @@
+-- P1.3 开发界面：第一轮落点/接触面 → 第二轮力度心理曲线，共用同一个确认操作。
+-- 画面里的踏板、鞋底、交集矩形与算法使用同一组数据，避免图形与读数不符。
+local UI = require("urhox-libs/UI")
+local Landing = require("gameplay.Landing")
+local ForceCurve = require("gameplay.ForceCurve")
+local ForceCurveStrip = require("ui.ForceCurveStrip")
+local View = {}
+
+---@class BrakeTestDemoView
+---@field root Widget
+---@field lastState string
+---@field Refresh fun(self: BrakeTestDemoView, landing: LandingModel, force: ForceCurveModel, phase: string)
+---@field ShowPaused fun(self: BrakeTestDemoView, paused: boolean)
+
+-- 阶段常量与 main.lua 共用同一份字符串，避免两处字面量漂移。
+View.PHASE_LANDING = "landing"
+View.PHASE_FORCE = "force"
+View.PHASE_DONE = "done"
+
+---@param config LandingConfig
+---@param onConfirm fun(source: string)
+---@param onSelect fun(index: integer)
+---@return BrakeTestDemoView
+function View.Create(config, onConfirm, onSelect)
+    local phaseLabel = UI.Label { id = "phaseLabel", text = "第 1 轮 · 落点与接触面", fontSize = 12 }
+    local caption = UI.Label { id = "demoCaption", text = "鞋底移动中", fontSize = 18 }
+    local reading = UI.Label {
+        id = "demoReading", text = "停点  —", fontSize = 14,
+        width = "100%", whiteSpace = "normal",
+    }
+    local selectedLabel = UI.Label { text = "鞋型：宽底占位", fontSize = 13 }
+    local actionText = UI.Label { text = "确认 · 按停", fontSize = 18 }
+    local note = UI.Label {
+        text = "鞋型仅用于开发；第 1 轮按停后可换鞋对比同一落点。",
+        width = "100%", fontSize = 11, whiteSpace = "normal",
+    }
+    local pedal = UI.Panel {
+        id = "landingPedal", position = "absolute", borderRadius = 0,
+        backgroundColor = { 66, 79, 90, 255 }, pointerEvents = "none",
+    }
+    local center = UI.Panel {
+        id = "demoCursor", position = "absolute", width = 6, height = 6,
+        borderRadius = 0, backgroundColor = { 230, 75, 70, 255 }, pointerEvents = "none",
+    }
+    ---@type Panel[]
+    local shoePanels = {}
+    ---@type Panel[]
+    local contactPanels = {}
+    local maxParts = 0
+    for _, shoe in ipairs(config.shoes) do maxParts = math.max(maxParts, #shoe.parts) end
+    local boardChildren = { pedal }
+    for i = 1, maxParts do
+        local shoePart = UI.Panel {
+            position = "absolute", borderRadius = 0,
+            backgroundColor = { 23, 167, 176, 145 }, pointerEvents = "none",
+        }
+        local contactPart = UI.Panel {
+            position = "absolute", borderRadius = 0,
+            backgroundColor = { 246, 185, 62, 255 }, pointerEvents = "none", visible = false,
+        }
+        shoePanels[i] = shoePart
+        contactPanels[i] = contactPart
+        boardChildren[#boardChildren + 1] = shoePart
+        boardChildren[#boardChildren + 1] = contactPart
+    end
+    boardChildren[#boardChildren + 1] = center
+    local board = UI.Panel {
+        id = "landingBoard", width = 280, height = 280, borderRadius = 0,
+        backgroundColor = { 229, 236, 235, 255 }, overflow = "hidden",
+        pointerEvents = "none", children = boardChildren,
+    }
+    local landingBox = UI.Panel {
+        width = "100%", flexDirection = "row", flexWrap = "wrap", gap = 20,
+        children = {
+            board,
+            UI.Panel {
+                flexGrow = 1, flexShrink = 1, minWidth = 220, gap = 12,
+                children = { caption, selectedLabel, reading },
+            },
+        },
+    }
+    local strip = ForceCurveStrip { id = "forceStrip" }
+    local forceBox = UI.Panel {
+        width = "100%", flexDirection = "column", gap = 10,
+        children = {
+            strip,
+            UI.Label {
+                text = "曲线两端大、中间小；低平区变窄或整体上移时，中间这次在哪要重新找。",
+                width = "100%", fontSize = 11, whiteSpace = "normal",
+            },
+            reading,
+        },
+    }
+    ---@type Button[]
+    local shoeButtons = {}
+    for i, shoe in ipairs(config.shoes) do
+        local index = i
+        shoeButtons[i] = UI.Button {
+            id = "shoe" .. i, text = shoe.name, fontSize = 11,
+            height = 48, disabled = true,
+            onClick = function(_, event)
+                if not event or event:IsPrimaryAction() then onSelect(index) end
+            end,
+        }
+    end
+    local shoeRow = UI.Panel {
+        width = "100%", flexDirection = "row", flexWrap = "wrap",
+        gap = 6, children = shoeButtons,
+    }
+    local action = UI.Panel {
+        id = "demoAction", width = "100%", height = 64,
+        justifyContent = "center", alignItems = "center",
+        backgroundColor = UI.Theme.Color("primary"),
+        onPointerDown = function(event)
+            if event:IsPrimaryAction() and event.isPrimary then
+                event:StopPropagation()
+                onConfirm(event.pointerType)
+            end
+        end,
+        children = { actionText },
+    }
+    local card = UI.Card {
+        width = "100%", maxWidth = 880, padding = 20, gap = 12,
+        children = {
+            UI.Label { text = "舆论刹车", fontSize = 24 },
+            UI.Label { text = "P1.3 / 两轮判定与心理曲线（开发版）", fontSize = 12 },
+            phaseLabel,
+            landingBox,
+            forceBox,
+            shoeRow,
+            action,
+            note,
+            UI.Label {
+                text = "深灰：踏板 / 蓝绿：鞋底 / 金色：交集 / 红点：作用点 / 青带：低平区",
+                width = "100%", fontSize = 11, whiteSpace = "normal",
+            },
+            UI.Label {
+                text = "空格 / 回车或点击确认按停；第 1 轮锁定后用 ← → 或按钮换鞋。数据不代表正式力度。",
+                width = "100%", fontSize = 11, whiteSpace = "normal",
+            },
+        },
+    }
+    local root = UI.Panel {
+        width = "100%", height = "100%", backgroundColor = UI.Theme.Color("background"),
+        children = {
+            UI.SafeAreaView {
+                width = "100%", height = "100%", nativeMenuInset = true, padding = 16,
+                children = {
+                    UI.ScrollView {
+                        width = "100%", flexGrow = 1, flexBasis = 0,
+                        children = {
+                            UI.Panel { width = "100%", alignItems = "center", paddingVertical = 8,
+                                children = { card } },
+                        },
+                    },
+                },
+            },
+        },
+    }
+    local view = { root = root, lastState = "" }
+
+    ---@param landing LandingModel
+    ---@param force ForceCurveModel
+    ---@param phase string
+    function view:Refresh(landing, force, phase)
+        local landingActive = phase == View.PHASE_LANDING
+        landingBox:SetVisible(landingActive)
+        forceBox:SetVisible(not landingActive)
+        shoeRow:SetVisible(landingActive)
+        note:SetVisible(landingActive)
+        -- 离开第一轮就禁用按钮，否则结束态会留着可点却无效的换鞋按钮。
+        for _, button in ipairs(shoeButtons) do
+            button:SetDisabled(not landingActive or landing.moving)
+        end
+        strip:SetModel(force)
+        if phase == View.PHASE_LANDING then
+            local layout = board:GetLayout()
+            local size = math.min(layout.w, layout.h)
+            local shoe = assert(config.shoes[landing.shoeIndex], "鞋型索引无效")
+            pedal:SetStyle({ left = config.pedal.x * size, top = config.pedal.y * size,
+                width = config.pedal.w * size, height = config.pedal.h * size })
+            center:SetStyle({ left = landing.x * size - 3, top = landing.y * size - 3 })
+            local contact = Landing.Contact(config.pedal, shoe, landing.x, landing.y)
+            for i = 1, maxParts do
+                local part = shoe.parts[i]
+                local shoePanel = assert(shoePanels[i])
+                local contactPanel = assert(contactPanels[i])
+                shoePanel:SetVisible(part ~= nil)
+                if part then
+                    shoePanel:SetStyle({ left = (landing.x + part.x) * size,
+                        top = (landing.y + part.y) * size, width = part.w * size, height = part.h * size })
+                end
+                local overlap = contact.intersections[i]
+                contactPanel:SetVisible(not landing.moving and overlap ~= nil)
+                if overlap then
+                    contactPanel:SetStyle({ left = overlap.x * size, top = overlap.y * size,
+                        width = overlap.w * size, height = overlap.h * size })
+                end
+            end
+            phaseLabel:SetText("第 1 轮 · 落点与接触面")
+            caption:SetText(landing.moving and "鞋底移动中" or "落点已锁定")
+            selectedLabel:SetText("鞋型：" .. shoe.name)
+            actionText:SetText(landing.moving and "确认 · 按停" or "确认 · 进入第 2 轮")
+            self.lastState = landing.moving and "moving" or "locked"
+            if landing.moving then
+                if reading:GetText() ~= "停点  —" then reading:SetText("停点  —") end
+            else
+                local text = string.format(
+                    "停点  (%.3f, %.3f)\n接触面积  %.4f\n鞋底接触占比  %.1f%%\n踏板覆盖占比  %.1f%%",
+                    landing.x, landing.y, contact.area,
+                    contact.shoeCoverage * 100, contact.pedalCoverage * 100)
+                if reading:GetText() ~= text then reading:SetText(text) end
+            end
+        else
+            phaseLabel:SetText(phase == View.PHASE_DONE and "本轮两轮判定已结束"
+                or "第 2 轮 · 力度")
+            caption:SetText(force.moving and "力度游标移动中" or "力度已锁定")
+            actionText:SetText(force.moving and "确认 · 按停" or "确认 · 开始下一次测量")
+            self.lastState = force.moving and "moving" or "locked"
+            local level, flatHalf = ForceCurve.Evaluate(force.spec, force.x, force.sweetSpot,
+                force.agitation, force.fatigue)
+            local text = string.format(
+                "力度  %.3f（开发归一化）\n甜蜜点  %.3f\n低平区半宽  %.3f\n暴躁  %.2f ｜ 疲劳  %.2f",
+                level, force.sweetSpot, flatHalf, force.agitation, force.fatigue)
+            if reading:GetText() ~= text then reading:SetText(text) end
+        end
+    end
+
+    ---@param paused boolean
+    function view:ShowPaused(paused)
+        if paused then
+            caption:SetText("已暂停 · 回到前台后继续")
+        else
+            caption:SetText(self.lastState == "moving" and "移动中" or "已锁定")
+        end
+    end
+
+    return view
+end
+
+return View

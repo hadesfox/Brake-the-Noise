@@ -1,46 +1,74 @@
 -- 《舆论刹车》开发入口，沿用标准 2D 脚手架的生命周期与新 UI 系统。
--- 当前运行 P1.2 落点几何 Demo；正式三幕和数值规则尚未启用。
+-- 当前运行 P1.3 两轮判定 Demo（落点/接触面 → 力度心理曲线）；正式三幕和数值规则尚未启用。
 local UI = require("urhox-libs/UI")
 local DemoConfig = require("config.Demo")
 local GameConfig = require("config.Game")
 local Parameters = require("core.Parameters")
 local Contracts = require("core.Contracts")
 local Landing = require("gameplay.Landing")
+local ForceCurve = require("gameplay.ForceCurve")
 local ActionGate = require("core.ActionGate")
-local LandingDemo = require("ui.LandingDemo")
+local BrakeTestDemo = require("ui.BrakeTestDemo")
 
-local model = Landing.Create(DemoConfig.landing, DemoConfig.landingSeed)
+local landing = Landing.Create(DemoConfig.landing, DemoConfig.landingSeed)
+local force = ForceCurve.Create(DemoConfig.force, DemoConfig.forceSeed)
 local gate = ActionGate.Create()
--- 视图由 LandingDemo.Create 创建，生命周期覆盖当前开发测量。
----@type LandingDemoView?
+-- 视图由 BrakeTestDemo.Create 创建，生命周期覆盖当前开发测量。
+---@type BrakeTestDemoView?
 local view = nil
 local paused = false
 local skipNextUpdate = false
+---@type string
+local phase = BrakeTestDemo.PHASE_LANDING
 ---@type integer
 local attempt = 0
 
-local function Confirm(source)
-    if paused or not view or not gate:Accept(time:GetFrameNumber()) then return end
-    -- 一次确认只处理一个状态，锁定记录与后续换鞋预览相互独立。
-    if model.moving then
-        local record = model:Lock(source)
-        if record then
-            attempt = attempt + 1
-            print(string.format("[落点台] 测量=%d 鞋型=%s 落点=(%.6f,%.6f) 面积=%.6f 活跃时间=%.3f 种子=%d 来源=%s 配置=%s",
-                attempt, record.shoeId, record.x, record.y, record.area,
-                record.elapsed, record.seed, source, DemoConfig.version))
-        end
-    else
-        model:Resume()
-        print("[落点台] 从上次落点续测；历史不清空，不消耗正式游戏机会")
-    end
-    view:Refresh(model)
+local function Refresh()
+    if view then view:Refresh(landing, force, phase) end
 end
 
+-- 两轮共用同一个确认操作。
+-- 第一轮沿用作者已确认的 P1.2 手感：先按停锁定落点，此时可同点换鞋比较，再确认进入第二轮。
+-- 第二轮按停锁定力度并结束本次测量；结束态再确认开始下一次测量。
+local function Confirm(source)
+    if paused or not view or not gate:Accept(time:GetFrameNumber()) then return end
+    if phase == BrakeTestDemo.PHASE_DONE then
+        phase = BrakeTestDemo.PHASE_LANDING
+        landing:Resume()
+        Refresh()
+        return
+    end
+    if phase == BrakeTestDemo.PHASE_LANDING then
+        if landing.moving then
+            local record = landing:Lock(source)
+            if record then
+                print(string.format("[落点台] 落点鞋型=%s 停点=(%.6f,%.6f) 面积=%.6f 活跃时间=%.3f 来源=%s 配置=%s",
+                    record.shoeId, record.x, record.y, record.area, record.elapsed, source, DemoConfig.version))
+            end
+        else
+            phase = BrakeTestDemo.PHASE_FORCE
+            force:Start()
+        end
+    else
+        local record = force:Lock(source)
+        if record then
+            attempt = attempt + 1
+            print(string.format(
+                "[力度台] 测量=%d 力度=%.6f 停点=%.6f 甜蜜点=%.6f 低平区半宽=%.6f 陡峭=%.3f 暴躁=%.2f 疲劳=%.2f 活跃时间=%.3f 来源=%s 配置=%s",
+                attempt, record.force, record.x, record.sweetSpot, record.flatHalf, record.steepness,
+                record.agitation, record.fatigue, record.elapsed, source, DemoConfig.version))
+        end
+        phase = BrakeTestDemo.PHASE_DONE
+    end
+    Refresh()
+end
+
+-- 第 1 轮按停后可同点换鞋；第 2 轮与结束态不再响应。
 local function SelectShoe(index)
-    if paused or model.moving or not view or not gate:Accept(time:GetFrameNumber()) then return end
-    if model:SelectShoe(index) then
-        view:Refresh(model)
+    if paused or phase ~= BrakeTestDemo.PHASE_LANDING or landing.moving
+        or not view or not gate:Accept(time:GetFrameNumber()) then return end
+    if landing:SelectShoe(index) then
+        Refresh()
         print("[落点台] 同点换鞋预览=" .. DemoConfig.landing.shoes[index].id .. "；已锁定历史不改写")
     end
 end
@@ -52,24 +80,22 @@ function Start()
     UI.Init({
         theme = "default-taptap",
         scale = UI.Scale.DEFAULT,
-        fonts = {
-            { family = "sans", weights = {
-                normal = "Fonts/MiSans-Regular.ttf",
-                bold = "Fonts/MiSans-Regular.ttf",
-            } },
-        },
+        fonts = { { family = "sans", weights = {
+            normal = "Fonts/MiSans-Regular.ttf",
+            bold = "Fonts/MiSans-Regular.ttf",
+        } } },
     })
-    view = LandingDemo.Create(DemoConfig.landing, Confirm, SelectShoe)
+    view = BrakeTestDemo.Create(DemoConfig.landing, Confirm, SelectShoe)
     UI.SetRoot(view.root)
     UI.Layout()
-    view:Refresh(model)
+    Refresh()
     SubscribeToEvent("Update", "HandleUpdate")
     SubscribeToEvent("KeyDown", "HandleKeyDown")
     SubscribeToEvent("KeyUp", "HandleKeyUp")
     SubscribeToEvent("InputFocus", "HandleInputFocus")
     local issues = Parameters.Check(GameConfig, "testing")
-    print("[舆论刹车] P1.2 落点几何台启动，数据契约版本=" .. Contracts.schemaVersion)
-    print("[配置] 正式参数未启用；待补项目=" .. #issues .. "，仅运行开发几何 Demo")
+    print("[舆论刹车] P1.3 两轮判定台启动，数据契约版本=" .. Contracts.schemaVersion)
+    print("[配置] 正式参数未启用；待补项目=" .. #issues .. "，仅运行开发几何与曲线 Demo")
     for _, issue in ipairs(issues) do print("[配置] " .. issue) end
 end
 
@@ -81,7 +107,7 @@ function Stop()
     UI.Shutdown()
     view = nil
     gate:ClearHeld()
-    print("[舆论刹车] 手感台已清理")
+    print("[舆论刹车] 开发台已清理")
 end
 
 ---@param eventType string
@@ -92,8 +118,14 @@ function HandleUpdate(eventType, eventData)
         skipNextUpdate = false
         return
     end
-    model:Update(eventData:GetFloat("TimeStep"))
-    view:Refresh(model)
+    local dt = eventData:GetFloat("TimeStep")
+    -- 只推进当前阶段，另一轮保持锁定，避免隐藏状态在未开始的那一轮提前生效。
+    if phase == BrakeTestDemo.PHASE_LANDING then
+        landing:Update(dt)
+    elseif phase == BrakeTestDemo.PHASE_FORCE then
+        force:Update(dt)
+    end
+    Refresh()
 end
 
 ---@param eventType string
@@ -104,7 +136,7 @@ function HandleKeyDown(eventType, eventData)
     if not gate:Press(key, eventData:GetBool("Repeat")) then return end
     if key == KEY_LEFT or key == KEY_RIGHT then
         local direction = key == KEY_LEFT and -1 or 1
-        local index = ((model.shoeIndex - 1 + direction) % #DemoConfig.landing.shoes) + 1
+        local index = ((landing.shoeIndex - 1 + direction) % #DemoConfig.landing.shoes) + 1
         SelectShoe(index)
     else
         Confirm("keyboard")
@@ -124,5 +156,5 @@ function HandleInputFocus(eventType, eventData)
     gate:ClearHeld()
     skipNextUpdate = not paused
     if view then view:ShowPaused(paused) end
-    print("[手感台] 焦点状态=" .. (paused and "暂停" or "恢复"))
+    print("[开发台] 焦点状态=" .. (paused and "暂停" or "恢复"))
 end
