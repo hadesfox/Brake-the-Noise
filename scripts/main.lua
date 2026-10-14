@@ -47,10 +47,15 @@ local function Confirm(source)
             if record then
                 local mapping = ContactMapping.Evaluate(DemoConfig.contact,
                     record.pedalCoverage, record.shoeCoverage)
-                if record.hasContact and record.centroidX and record.centroidY then
+                if record.outcome == "throttle" then
+                    print(string.format(
+                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 结果=throttle 踩到油门 油门交集面积=%.6f 活跃时间=%.3f 来源=%s 配置=%s",
+                        record.shoeId, record.x, record.y, record.throttleArea,
+                        record.elapsed, source, DemoConfig.version))
+                elseif record.hasContact and record.centroidX and record.centroidY then
                     local arm = Lever.Arm(DemoConfig.lever, record.centroidX, record.centroidY)
                     print(string.format(
-                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 受力重心=(%.6f,%.6f) L=%.4f 距离=%.4f 钳制=%s 面积=%.6f r踏板=%.4f r鞋底=%.4f A集中=%.4f E传导=%.4f A有效=%.4f 活跃时间=%.3f 来源=%s 配置=%s",
+                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 结果=brake 受力重心=(%.6f,%.6f) L=%.4f 距离=%.4f 钳制=%s 面积=%.6f r踏板=%.4f r鞋底=%.4f A集中=%.4f E传导=%.4f A有效=%.4f 活跃时间=%.3f 来源=%s 配置=%s",
                         record.shoeId, record.x, record.y, record.centroidX, record.centroidY,
                         arm.l, arm.distance, tostring(arm.clamped), record.area,
                         record.pedalCoverage, record.shoeCoverage,
@@ -58,7 +63,7 @@ local function Confirm(source)
                         record.elapsed, source, DemoConfig.version))
                 else
                     print(string.format(
-                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 踩空：无受力重心，不进入载荷计算 活跃时间=%.3f 来源=%s 配置=%s",
+                        "[落点台] 鞋型=%s 鞋中心=(%.6f,%.6f) 结果=missed 踩空：无受力重心，不进入载荷计算 活跃时间=%.3f 来源=%s 配置=%s",
                         record.shoeId, record.x, record.y, record.elapsed, source, DemoConfig.version))
                 end
             end

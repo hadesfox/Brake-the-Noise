@@ -54,6 +54,20 @@ function View.Create(config, demo, onConfirm, onSelect)
         id = "landingPedal", position = "absolute", borderRadius = 0,
         backgroundColor = { 66, 79, 90, 255 }, pointerEvents = "none",
     }
+    -- 油门：刹车踏板旁边的窄长踏板；与刹车用同一次真实交集判定。
+    local throttle = UI.Panel {
+        id = "landingThrottle", position = "absolute", borderRadius = 0,
+        backgroundColor = { 205, 133, 63, 255 }, pointerEvents = "none",
+        visible = config.throttle ~= nil,
+    }
+    -- 踩到油门时的交集高亮，与刹车交集用不同颜色区分。
+    local throttleHit = UI.Panel {
+        id = "landingThrottleHit", position = "absolute", borderRadius = 0,
+        backgroundColor = { 231, 76, 60, 255 }, pointerEvents = "none", visible = false,
+    }
+    -- 开发用进度读数：实时显示本次扫过的落点里有多少是踩空、其中多少踩到油门。
+    -- 正式局不显示；这里只为让作者看到真实概率，避免用"面积很小"估算稀有度。
+    local throttleStats = { samples = 0, missed = 0, throttle = 0 }
     local center = UI.Panel {
         id = "demoCursor", position = "absolute", width = 6, height = 6,
         borderRadius = 0, backgroundColor = { 230, 75, 70, 255 }, pointerEvents = "none",
@@ -79,7 +93,7 @@ function View.Create(config, demo, onConfirm, onSelect)
     local contactPanels = {}
     local maxParts = 0
     for _, shoe in ipairs(config.shoes) do maxParts = math.max(maxParts, #shoe.parts) end
-    local boardChildren = { pedal, leverArm, pivot }
+    local boardChildren = { pedal, throttle, leverArm, pivot }
     for i = 1, maxParts do
         local shoePart = UI.Panel {
             position = "absolute", borderRadius = 0,
@@ -94,6 +108,7 @@ function View.Create(config, demo, onConfirm, onSelect)
         boardChildren[#boardChildren + 1] = shoePart
         boardChildren[#boardChildren + 1] = contactPart
     end
+    boardChildren[#boardChildren + 1] = throttleHit
     boardChildren[#boardChildren + 1] = center
     boardChildren[#boardChildren + 1] = centroid
     local board = UI.Panel {
@@ -164,7 +179,11 @@ function View.Create(config, demo, onConfirm, onSelect)
             action,
             note,
             UI.Label {
-                text = "深灰：踏板 / 蓝绿：鞋底 / 金色：交集 / 红点：鞋中心 / 紫点：受力重心 / 深蓝点：支点",
+                text = "深灰：刹车踏板 / 棕色：油门 / 蓝绿：鞋底 / 金色：刹车交集 / 红色：油门交集",
+                width = "100%", fontSize = 11, whiteSpace = "normal",
+            },
+            UI.Label {
+                text = "红点：鞋中心 / 紫点：受力重心 / 深蓝点：支点",
                 width = "100%", fontSize = 11, whiteSpace = "normal",
             },
             UI.Label {
@@ -215,8 +234,32 @@ function View.Create(config, demo, onConfirm, onSelect)
             pivot:SetStyle({ left = pivotLeft - 4, top = pivotTop - 4 })
             pedal:SetStyle({ left = config.pedal.x * size, top = config.pedal.y * size,
                 width = config.pedal.w * size, height = config.pedal.h * size })
+            if config.throttle then
+                throttle:SetStyle({ left = config.throttle.x * size, top = config.throttle.y * size,
+                    width = config.throttle.w * size, height = config.throttle.h * size })
+            end
             center:SetStyle({ left = landing.x * size - 3, top = landing.y * size - 3 })
-            local contact = Landing.Contact(config.pedal, shoe, landing.x, landing.y)
+            local contact = Landing.Contact(config.pedal, shoe, landing.x, landing.y, config.throttle)
+            -- 开发统计：累计本次扫过的落点，得出踩空里踩到油门的真实比例。
+            if demo.showDebugState and landing.moving then
+                throttleStats.samples = throttleStats.samples + 1
+                if contact.outcome == "missed" then
+                    throttleStats.missed = throttleStats.missed + 1
+                elseif contact.outcome == "throttle" then
+                    throttleStats.throttle = throttleStats.throttle + 1
+                end
+            end
+            -- 只在结果是踩到油门时高亮；鞋底横跨两者而正常刹车时结果仍是 brake。
+            local throttleVisible = not landing.moving and contact.outcome == "throttle"
+            throttleHit:SetVisible(throttleVisible)
+            if throttleVisible and config.throttle then
+                local throttleRects = Landing.OverlapRects(config.throttle, shoe, landing.x, landing.y)
+                local firstThrottle = throttleRects[1]
+                if firstThrottle then
+                    throttleHit:SetStyle({ left = firstThrottle.x * size, top = firstThrottle.y * size,
+                        width = firstThrottle.w * size, height = firstThrottle.h * size })
+                end
+            end
             -- 杆从支点连到受力重心；锁点前受力重心未知，杆先连到鞋中心。
             local armTargetX = contact.centroidX or landing.x
             local armTargetY = contact.centroidY or landing.y
@@ -262,7 +305,11 @@ function View.Create(config, demo, onConfirm, onSelect)
                 local mapping = ContactMapping.Evaluate(demo.contact,
                     contact.pedalCoverage, contact.shoeCoverage)
                 local text
-                if contact.hasContact and contact.centroidX and contact.centroidY then
+                if contact.outcome == "throttle" then
+                    text = string.format(
+                        "鞋中心  (%.3f, %.3f)\n踩到油门：本次不进入刹车载荷计算\n油门交集面积  %.4f",
+                        landing.x, landing.y, contact.throttleArea)
+                elseif contact.hasContact and contact.centroidX and contact.centroidY then
                     local arm = Lever.Arm(demo.lever, contact.centroidX, contact.centroidY)
                     text = string.format(
                         "鞋中心  (%.3f, %.3f)\n受力重心  (%.3f, %.3f)\n力臂 L  %.4f\n接触面积  %.4f\n踏板覆盖  %.1f%% ｜ 鞋底接触  %.1f%%\nA集中  %.3f × E传导  %.3f = A有效  %.3f",
@@ -270,13 +317,24 @@ function View.Create(config, demo, onConfirm, onSelect)
                         contact.area, contact.pedalCoverage * 100, contact.shoeCoverage * 100,
                         mapping.concentrate, mapping.conduction, mapping.effective)
                 else
-                    text = "鞋中心  (%.3f, %.3f)\n踩空：没有受力重心，不进入载荷计算"
-                    text = string.format(text, landing.x, landing.y)
+                    text = string.format(
+                        "鞋中心  (%.3f, %.3f)\n踩空：没有受力重心，不进入载荷计算",
+                        landing.x, landing.y)
                 end
                 if reading:GetText() ~= text then reading:SetText(text) end
             end
-            debugReading:SetText(demo.showDebugState
-                and "开发：显示受力重心、L 与 A有效；正式局内不得出现隐藏状态数字。" or "")
+            if demo.showDebugState then
+                -- 分母用"踩空"而不是全部落点，因为油门只可能发生在踩空时。
+                local stats = "开发：显示受力重心、L 与 A有效；正式局内不得出现隐藏状态数字。"
+                if throttleStats.missed > 0 then
+                    stats = stats .. string.format("\n开发统计：本次扫过 %d 点，踩空 %d 点，其中踩到油门 %d 点（%.2f%%）",
+                        throttleStats.samples, throttleStats.missed, throttleStats.throttle,
+                        throttleStats.throttle / throttleStats.missed * 100)
+                end
+                debugReading:SetText(stats)
+            else
+                debugReading:SetText("")
+            end
         else
             phaseLabel:SetText(phase == View.PHASE_DONE and "本轮两轮判定已结束"
                 or "第 2 轮 · 力度")

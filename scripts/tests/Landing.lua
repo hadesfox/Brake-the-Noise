@@ -45,7 +45,16 @@ local function SameRecord(a, b)
         and a.shoeCoverage == b.shoeCoverage and a.pedalCoverage == b.pedalCoverage
         and a.hasContact == b.hasContact and a.centroidX == b.centroidX and a.centroidY == b.centroidY
         and a.shoeCentroidX == b.shoeCentroidX and a.shoeCentroidY == b.shoeCentroidY
+        and a.throttleArea == b.throttleArea and a.hasThrottleContact == b.hasThrottleContact
+        and a.outcome == b.outcome
         and a.elapsed == b.elapsed and a.seed == b.seed and a.source == b.source
+end
+
+-- 油门放在刹车踏板右侧、贴近移动范围边缘；形状更窄更长，贴合现实摆放。
+-- 位置与测试 Fixture 的踏板（x 0.25～0.75）分离，不能重叠。
+---@return LandingRect
+local function ThrottleFixture()
+    return { x = 0.78, y = 0.30, w = 0.06, h = 0.40 }
 end
 
 ---@return integer
@@ -264,6 +273,132 @@ function Tests.Run()
     assert(weighted.previousX ~= nil and weighted.previousY ~= nil)
     Check(Near(weighted.targetX, (unbiased.targetX + weighted.previousX) / 2)
         and Near(weighted.targetY, (unbiased.targetY + weighted.previousY) / 2), "权重按配置向上次落点插值，无隐藏业务参数")
+
+    -- 油门：与刹车共用同一套逐块交集口径，结果三分。
+    -- 用贴近真实比例的鞋型；Fixture 的方鞋比整个踏板还大，会同时盖住油门。
+    local throttle = ThrottleFixture()
+    ---@type LandingShoe
+    local realShoe = { id = "real", name = "真实比例鞋", parts = {
+        { x = -0.05, y = -0.16, w = 0.10, h = 0.32 },
+    } }
+    local onBrake = Landing.Contact(pedal, realShoe, 0.5, 0.5, throttle)
+    Check(onBrake.outcome == "brake" and onBrake.hasThrottleContact == false
+        and onBrake.throttleArea == 0, "踩刹车时结果不是油门")
+    -- 鞋底横跨踏板右边缘与油门时，正常刹车优先，油门不会吞掉刹车。
+    local straddle = Landing.Contact(pedal, realShoe, 0.78, 0.5, throttle)
+    Check(straddle.area > 0 and straddle.throttleArea > 0 and straddle.outcome == "brake",
+        "鞋底同时碰到刹车与油门时结果仍是刹车")
+    local onThrottle = Landing.Contact(pedal, realShoe, 0.81, 0.5, throttle)
+    Check(onThrottle.outcome == "throttle" and onThrottle.hasThrottleContact
+        and onThrottle.throttleArea > 0, "踩到油门时结果标记为 throttle")
+    Check(onThrottle.area == 0, "踩油门时没有刹车交集，不进入刹车载荷计算")
+    local missed = Landing.Contact(pedal, realShoe, 0.5, 0.05, throttle)
+    Check(missed.outcome == "missed" and not missed.hasThrottleContact
+        and not missed.hasContact, "两边都没踩到时结果为 missed")
+    local noThrottle = Landing.Contact(pedal, realShoe, 0.5, 0.5)
+    Check(noThrottle.throttleArea == 0 and noThrottle.outcome == "brake",
+        "没有配置油门时行为与旧版一致")
+    local throttleOnly = Landing.Contact(pedal, realShoe, 0.81, 0.5)
+    Check(throttleOnly.outcome == "missed", "没配置油门时踩到油门位置只算踩空")
+    -- 鞋底完全滑到油门右侧后不再接触，结果仍是踩空。
+    local throttlePast = Landing.Contact(pedal, realShoe, 0.91, 0.5, throttle)
+    Check(throttlePast.throttleArea == 0 and throttlePast.outcome == "missed",
+        "鞋底滑过油门后不再算踩到")
+    -- 界面复用的交集矩形接口与面积口径一致。
+    local throttleRects = Landing.OverlapRects(throttle, realShoe, 0.81, 0.5)
+    Check(#throttleRects >= 1, "OverlapRects 返回油门交集矩形")
+    local throttleRectSum = 0.0
+    for _, rect in ipairs(throttleRects) do throttleRectSum = throttleRectSum + rect.w * rect.h end
+    Check(Near(throttleRectSum, onThrottle.throttleArea), "OverlapRects 面积与 Contact 口径一致")
+    Check(#Landing.OverlapRects(pedal, realShoe, 0.5, 0.05) == 0, "无交集时返回空列表")
+
+    -- 实测踩到油门的概率：在移动范围内均匀取样，比较不同鞋型。
+    -- 概率主要由鞋底宽度决定，不是油门面积占比，因此必须用真实几何统计而不是估算。
+    -- 返回两个数：占全部落点的比例，以及占"踩空"的比例（后者才是玩家感知到的意外率）。
+    ---@param sampling LandingConfig
+    ---@param shoeIndex integer
+    ---@param steps integer
+    ---@return number overallRate
+    ---@return number missedRate
+    local function ThrottleRate(sampling, shoeIndex, steps)
+        local targetShoe = assert(sampling.shoes[shoeIndex], "统计用鞋型缺失")
+        local bounds = sampling.bounds
+        local hits, missedCount, total = 0, 0, 0
+        for ix = 0, steps do
+            for iy = 0, steps do
+                local x = bounds.minX + (bounds.maxX - bounds.minX) * (ix / steps)
+                local y = bounds.minY + (bounds.maxY - bounds.minY) * (iy / steps)
+                total = total + 1
+                local contact = Landing.Contact(sampling.pedal, targetShoe, x, y, sampling.throttle)
+                if contact.outcome == "throttle" then
+                    hits = hits + 1
+                    missedCount = missedCount + 1
+                elseif contact.outcome == "missed" then
+                    missedCount = missedCount + 1
+                end
+            end
+        end
+        return hits / total, missedCount > 0 and hits / missedCount or 0
+    end
+    local probabilityConfig = Fixture()
+    probabilityConfig.bounds = { minX = 0.08, maxX = 0.92, minY = 0.12, maxY = 0.88 }
+    probabilityConfig.pedal = { x = 0.38, y = 0.24, w = 0.24, h = 0.52 }
+    probabilityConfig.throttle = ThrottleFixture()
+    probabilityConfig.shoes = {
+        { id = "wide", name = "宽底", parts = { { x = -0.11, y = -0.18, w = 0.22, h = 0.36 } } },
+        { id = "slim", name = "窄底", parts = { { x = -0.05, y = -0.18, w = 0.10, h = 0.36 } } },
+    }
+    local wideRate, wideMissedRate = ThrottleRate(probabilityConfig, 1, 200)
+    local slimRate, slimMissedRate = ThrottleRate(probabilityConfig, 2, 200)
+    Check(wideRate > 0 and wideRate < 1, "踩油门是小概率但非必然事件")
+    Check(slimRate < wideRate, "窄底鞋踩到油门的概率低于宽底鞋")
+    Check(wideMissedRate > wideRate, "踩空条件下的踩油门率高于占全部落点的比例")
+    -- 概率主要由鞋底宽度与油门位置共同决定，这里把真实数字打出来供作者决定摆放。
+    print(string.format("[落点验证] 油门实测：宽底 占全部 %.2f%% / 占踩空 %.2f%%；窄底 占全部 %.2f%% / 占踩空 %.2f%%",
+        wideRate * 100, wideMissedRate * 100, slimRate * 100, slimMissedRate * 100))
+
+    -- 开发 Demo 的实际摆放：贴刹车右侧、贴近移动范围边缘。这里量出真实概率供作者定摆放。
+    local demoConfig = Fixture()
+    demoConfig.bounds = { minX = 0.08, maxX = 0.92, minY = 0.12, maxY = 0.88 }
+    demoConfig.pedal = { x = 0.38, y = 0.24, w = 0.24, h = 0.52 }
+    demoConfig.throttle = { x = 0.64, y = 0.30, w = 0.06, h = 0.40 }
+    demoConfig.shoes = {
+        { id = "flat", name = "宽底", parts = { { x = -0.11, y = -0.18, w = 0.22, h = 0.36 } } },
+        { id = "slim", name = "窄底", parts = { { x = -0.05, y = -0.18, w = 0.10, h = 0.36 } } },
+    }
+    local demoWide, demoWideMissed = ThrottleRate(demoConfig, 1, 200)
+    local demoSlim, demoSlimMissed = ThrottleRate(demoConfig, 2, 200)
+    print(string.format("[落点验证] Demo 摆放实测：宽底 占全部 %.2f%% / 占踩空 %.2f%%；窄底 占全部 %.2f%% / 占踩空 %.2f%%",
+        demoWide * 100, demoWideMissed * 100, demoSlim * 100, demoSlimMissed * 100))
+    Check(demoWide > 0 and demoSlim > 0, "Demo 摆放能真的踩到油门")
+    -- 稀有度由摆放位置与"刹车优先"共同决定，且关系不是单调的：
+    -- 油门贴着刹车时，鞋底横跨两者会被判为刹车，只有完全滑出刹车后仍碰到油门才算意外，因此反而稀有；
+    -- 油门离刹车远到鞋底能完全让开时，纯油门区间变宽，概率反而上升。这里把这个非直觉规律固定下来。
+    local adjacentWide = ThrottleRate(demoConfig, 1, 200)
+    local detached = Fixture()
+    detached.bounds = demoConfig.bounds
+    detached.pedal = demoConfig.pedal
+    detached.throttle = { x = 0.80, y = 0.30, w = 0.06, h = 0.40 }
+    detached.shoes = demoConfig.shoes
+    local detachedWide = ThrottleRate(detached, 1, 200)
+    Check(detachedWide > adjacentWide, "油门远离刹车后鞋底可完全让开，概率反而更高")
+    -- 真正压低概率的杠杆是纵向范围：油门越短，鞋底只在少数高度才碰得到。
+    local shortThrottle = Fixture()
+    shortThrottle.bounds = demoConfig.bounds
+    shortThrottle.pedal = demoConfig.pedal
+    shortThrottle.throttle = { x = 0.64, y = 0.42, w = 0.06, h = 0.16 }
+    shortThrottle.shoes = demoConfig.shoes
+    local shortWide = ThrottleRate(shortThrottle, 1, 200)
+    Check(shortWide < adjacentWide, "缩短油门纵向范围能真正降低踩到概率")
+
+    -- 油门与刹车重叠会让同一次落点同时命中两者，结果无法二选一，因此必须拒绝。
+    local overlapConfig = Fixture()
+    overlapConfig.throttle = { x = 0.5, y = 0.3, w = 0.2, h = 0.3 }
+    Check(not pcall(Landing.Create, overlapConfig, 1), "拒绝与刹车重叠的油门")
+    -- Fixture 的踏板右边缘是 0.75；油门从这里开始即为共边。
+    local touching = Fixture()
+    touching.throttle = { x = 0.75, y = 0.25, w = 0.06, h = 0.5 }
+    Check(pcall(Landing.Create, touching, 1), "油门与刹车共边允许")
 
     ---@param change fun(config: LandingConfig)
     ---@param description string

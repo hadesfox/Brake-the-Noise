@@ -30,7 +30,8 @@
 ---@field speed number 归一化欧氏距离/秒
 ---@field bounds LandingBounds 鞋中心运动边界，不是整个鞋底的包围范围
 ---@field habitWeight number 零到一，下一目标向上次锁点的插值权重
----@field pedal LandingRect
+---@field pedal LandingRect 刹车踏板
+---@field throttle LandingRect? 油门：贴合现实放在刹车踏板旁边；nil 表示本关没有油门
 ---@field shoes LandingShoe[]
 
 ---@class LandingContact
@@ -45,6 +46,9 @@
 ---@field centroidY number?
 ---@field shoeCentroidX number? 鞋底几何中心，玩家操作落点；零接触为空
 ---@field shoeCentroidY number?
+---@field throttleArea number 鞋底与油门的真实交集面积；无油门时为零
+---@field hasThrottleContact boolean 是否踩到油门
+---@field outcome string 锁定结果：brake / missed / throttle
 
 ---@class LandingRecord
 ---@field x number 鞋中心，玩家操作落点
@@ -60,6 +64,9 @@
 ---@field centroidY number?
 ---@field shoeCentroidX number? 鞋底几何中心
 ---@field shoeCentroidY number?
+---@field throttleArea number 鞋底与油门的真实交集面积
+---@field hasThrottleContact boolean 是否踩到油门
+---@field outcome string 锁定结果：brake / missed / throttle
 ---@field elapsed number 当前测量的有效运动时间，不含暂停和历史测量
 ---@field seed number 初始种子，不是已推进的 LCG 状态
 ---@field source string
@@ -164,6 +171,16 @@ local function ValidateConfig(config, seed)
     assert(diagonal > 0 and IsFinite(diagonal / config.speed) and diagonal / config.speed > 0,
         "速度或边界尺度无法表示有效线段时间")
     ValidateRect(config.pedal, false)
+    -- 油门可选。它与刹车踏板必须分离：重叠会让同一次落点同时命中两者，结果无法二选一。
+    if config.throttle ~= nil then
+        ValidateRect(config.throttle, false)
+        local throttle = config.throttle
+        local overlapW = math.min(config.pedal.x + config.pedal.w, throttle.x + throttle.w)
+            - math.max(config.pedal.x, throttle.x)
+        local overlapH = math.min(config.pedal.y + config.pedal.h, throttle.y + throttle.h)
+            - math.max(config.pedal.y, throttle.y)
+        assert(overlapW <= 0 or overlapH <= 0, "油门与刹车踏板不能重叠（共边允许）")
+    end
     local count = ArrayCount(config.shoes)
     assert(count > 0, "至少需要一双鞋")
     local ids = {}
@@ -200,6 +217,7 @@ local function CopyConfig(config)
             minY = config.bounds.minY, maxY = config.bounds.maxY },
         habitWeight = config.habitWeight,
         pedal = CopyRect(config.pedal),
+        throttle = config.throttle and CopyRect(config.throttle) or nil,
         shoes = shoes,
     }
 end
@@ -254,13 +272,67 @@ local function ShoeCentroid(shoe, x, y)
     return sumX / total, sumY / total
 end
 
+-- 鞋底与任意矩形（踏板或油门）的逐块真实交集。
+-- 与踏板交集共用同一套裁剪口径：只共边/共角不计，缺口不计，内部重叠已在配置阶段拒绝。
+---@param target LandingRect
+---@param shoe LandingShoe
+---@param x number
+---@param y number
+---@return LandingRect[] intersections
+---@return number area
+local function Overlap(target, shoe, x, y)
+    ---@type LandingRect[]
+    local intersections = {}
+    ---@type number
+    local area = 0
+    for _, part in ipairs(shoe.parts) do
+        local partX, partY = x + part.x, y + part.y
+        local left, top = math.max(target.x, partX), math.max(target.y, partY)
+        local right = math.min(target.x + target.w, partX + part.w)
+        local bottom = math.min(target.y + target.h, partY + part.h)
+        local w, h = math.max(0, right - left), math.max(0, bottom - top)
+        if w > 0 and h > 0 then
+            intersections[#intersections + 1] = { x = left, y = top, w = w, h = h }
+            area = area + w * h
+        end
+    end
+    return intersections, area
+end
+
+-- 供界面复用的公开接口：鞋底与任意矩形的真实交集矩形列表。
+---@param target LandingRect
+---@param shoe LandingShoe
+---@param x number
+---@param y number
+---@return LandingRect[]
+function Landing.OverlapRects(target, shoe, x, y)
+    ValidateRect(target, true)
+    ValidateParts(shoe, true)
+    assert(IsFinite(x) and IsFinite(y), "鞋中心必须是有限数值")
+    local intersections = Overlap(target, shoe, x, y)
+    return intersections
+end
+
+-- 锁定结果：踩到刹车就是 brake；只有在没踩到刹车时，碰到油门才算踩空时的意外。
+-- 这与"踩空时可能按到油门"一致：油门不会吞掉正常的刹车踩踏。
+-- 鞋底横跨两者时（油门贴着刹车右侧）结果是 brake，但仍记录几何上碰到了油门。
+---@param brakeArea number
+---@param throttleArea number
+---@return string
+local function Outcome(brakeArea, throttleArea)
+    if brakeArea > 0 then return "brake" end
+    if throttleArea > 0 then return "throttle" end
+    return "missed"
+end
+
 -- Contact 允许零尺寸/空 parts 作为退化几何（比例均安全为零）；Create 拒绝此类配置。
 ---@param pedal LandingRect
 ---@param shoe LandingShoe
 ---@param x number
 ---@param y number
+---@param throttle LandingRect? 可选油门，贴合现实放在刹车踏板旁边
 ---@return LandingContact
-function Landing.Contact(pedal, shoe, x, y)
+function Landing.Contact(pedal, shoe, x, y, throttle)
     ValidateRect(pedal, true)
     ValidateParts(shoe, true)
     assert(IsFinite(x) and IsFinite(y), "鞋中心必须是有限数值")
@@ -288,11 +360,20 @@ function Landing.Contact(pedal, shoe, x, y)
     local pedalArea = pedal.w * pedal.h
     local centroidX, centroidY = ContactCentroid(intersections, area)
     local shoeCentroidX, shoeCentroidY = ShoeCentroid(shoe, x, y)
+    local throttleArea = 0.0
+    if throttle ~= nil then
+        ValidateRect(throttle, true)
+        local _, overlapArea = Overlap(throttle, shoe, x, y)
+        throttleArea = overlapArea
+        assert(IsFinite(throttleArea), "油门交集面积溢出")
+    end
     return { area = area, shoeArea = shoeArea, pedalArea = pedalArea,
         shoeCoverage = Coverage(area, shoeArea), pedalCoverage = Coverage(area, pedalArea),
         intersections = intersections, hasContact = area > 0,
         centroidX = centroidX, centroidY = centroidY,
-        shoeCentroidX = shoeCentroidX, shoeCentroidY = shoeCentroidY }
+        shoeCentroidX = shoeCentroidX, shoeCentroidY = shoeCentroidY,
+        throttleArea = throttleArea, hasThrottleContact = throttleArea > 0,
+        outcome = Outcome(area, throttleArea) }
 end
 
 ---@param record LandingRecord
@@ -303,6 +384,8 @@ local function CopyRecord(record)
         shoeCoverage = record.shoeCoverage, pedalCoverage = record.pedalCoverage,
         hasContact = record.hasContact, centroidX = record.centroidX, centroidY = record.centroidY,
         shoeCentroidX = record.shoeCentroidX, shoeCentroidY = record.shoeCentroidY,
+        throttleArea = record.throttleArea, hasThrottleContact = record.hasThrottleContact,
+        outcome = record.outcome,
         elapsed = record.elapsed, seed = record.seed, source = record.source }
 end
 
@@ -413,13 +496,15 @@ function Landing:Lock(source)
     assert(source == nil or (type(source) == "string" and source ~= ""), "输入来源必须是非空字符串")
     local shoe = self.config.shoes[self.shoeIndex]
     assert(shoe ~= nil, "所选鞋配置缺失")
-    local contact = Landing.Contact(self.config.pedal, shoe, self.x, self.y)
+    local contact = Landing.Contact(self.config.pedal, shoe, self.x, self.y, self.config.throttle)
     ---@type LandingRecord
     local record = { x = self.x, y = self.y, shoeId = shoe.id,
         area = contact.area, shoeArea = contact.shoeArea, pedalArea = contact.pedalArea,
         shoeCoverage = contact.shoeCoverage, pedalCoverage = contact.pedalCoverage,
         hasContact = contact.hasContact, centroidX = contact.centroidX, centroidY = contact.centroidY,
         shoeCentroidX = contact.shoeCentroidX, shoeCentroidY = contact.shoeCentroidY,
+        throttleArea = contact.throttleArea, hasThrottleContact = contact.hasThrottleContact,
+        outcome = contact.outcome,
         elapsed = self.elapsed, seed = self.seed, source = source or "unknown" }
     self.moving = false
     self.previousX, self.previousY = self.x, self.y
