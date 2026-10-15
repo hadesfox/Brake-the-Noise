@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<material>
+	<technique name="Techniques/PBR/PBRNoTexture.xml" quality="0" loddistance="0" />
+	<parameter name="MatDiffColor" value="0.45098 0.729412 0.690196 1" />
+	<parameter name="Metallic" value="0" />
+	<parameter name="Roughness" value="0.92" />
+	<parameter name="MatEmissiveColor" value="0.117647 0.215686 0.203922" />
+	<cull value="none" />
+</material>

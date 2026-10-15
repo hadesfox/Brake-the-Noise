@@ -18,11 +18,30 @@
       "../assets",
       "../scripts"
     ],
-    "asset_ignores": []
+    "asset_ignores": [
+      "../assets/image",
+      "../assets/model/mpv_refined*",
+      "../assets/model/mpv_detail*",
+      "../assets/model/mpv_final",
+      "../assets/model/2274262e26bd4f32979ca5e18ab7d003",
+      "../assets/model/86d2b072c0664ca6a74549dec01e2ef3",
+      "../assets/model/**/*.zip"
+    ]
   },
   "@runtime": {
     "multiplayer": {
-      "enabled": false
+      "enabled": false,
+      "max_players": 4,
+      "background_match": false,
+      "match_info": {
+        "desc_name": "free_match",
+        "immediately_start": false,
+        "match_timeout": 0,
+        "player_number": 1
+      },
+      "persistent_world": {
+        "enabled": false
+      }
     }
   }
 }

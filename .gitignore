@@ -11,7 +11,6 @@ logs/.nfs*
 # Temp & swap files
 .tmp/
 *.crswap
-.org.chromium.Chromium.??????
 .DS_Store
 
 # OSS util
@@ -30,8 +29,25 @@ ossutil_output/
 .agent/
 .agents/
 .opencode/
-.cli/
 scripts/.luarc.json
+
+# Development validation artifacts (screenshots, logs, reports)
+validation/
+_uploads/
+mpv-physics-report.json
+
+# Model generation previews and superseded variants.
+# scripts/ only loads assets/model/mpv_seven_seat/, keep that one tracked.
+assets/image/
+assets/model/2274262e26bd4f32979ca5e18ab7d003/
+assets/model/86d2b072c0664ca6a74549dec01e2ef3/
+assets/model/mpv_detail_release/
+assets/model/mpv_detailed/
+assets/model/mpv_final/
+assets/model/mpv_refined_v1/
+assets/model/mpv_refined_v2/
+assets/model/*.zip
+assets/model/*.zip.meta
 
 # Maker engine assets & agent files (provided by ai-dev-kit, not user source)
 engine-docs/

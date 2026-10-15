@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<node>
+	<attribute name="Is Enabled" value="true" />
+	<attribute name="Name" value="CaptainSeatRight" />
+	<attribute name="Tags" value="" />
+	<attribute name="Position" value="0 0 0" />
+	<attribute name="Rotation" value="1 0 0 0" />
+	<attribute name="Scale" value="1 1 1" />
+	<attribute name="Variables" value="" />
+	<component type="StaticModel">
+		<attribute name="Model" value="Model;model/mpv_seven_seat/Models/CaptainSeatRight.mdl" />
+		<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/CaptainSeatRight_00_WalnutDashboard.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_02_SeatInsert.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_03_CharcoalTrim.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_04_MatteAlloy.xml" />
+		<attribute name="Cast Shadows" value="true" />
+	</component>
+</node>
