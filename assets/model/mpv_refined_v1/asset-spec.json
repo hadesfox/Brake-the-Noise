@@ -1,0 +1,22 @@
+{
+  "units": "meter",
+  "up_axis": "Y",
+  "forward_axis": "+Z",
+  "triangles": 19124,
+  "seat_layout": "2+2+2",
+  "wheel_radius": 0.425,
+  "wheel_axle_axis": "X",
+  "steering_rotation_axis": "Z",
+  "root": "OriginalMPV",
+  "wheel_nodes": [
+    "WheelFrontLeft",
+    "WheelRearLeft",
+    "WheelFrontRight",
+    "WheelRearRight"
+  ],
+  "steering_node": "SteeringWheel",
+  "side_windows": "open",
+  "windshield": "light transparent",
+  "driving_logic": false,
+  "source_model": "86d2b072c0664ca6a74549dec01e2ef3"
+}
