@@ -107,8 +107,7 @@ local function BuildSteps()
         function() return Text("boardingLine"):find("鞋型", 1, true) ~= nil
             or Text("boardingLine"):find("天气", 1, true) ~= nil end)
     Act("推进过场第 1 段", function() Tap(KEY_SPACE) end)
-    Expect("过场推进到第 2 段",
-        function() return Text("boardingTitle") == "坐定" or not Has("boardingTitle") end)
+    Expect("过场推进到第 2 段", function() return Text("boardingTitle") == "坐定" end)
     Act("推进过场第 2 段", function() Tap(KEY_SPACE) end)
     Expect("过场推进到第 3 段", function() return Text("boardingTitle") == "准备" end)
     Act("推进过场第 3 段", function() Tap(KEY_SPACE) end)
@@ -201,11 +200,6 @@ function HandleFlowTest()
             waited = 0
         else
             waited = waited + 1
-            if waited == 60 then
-                print(string.format("[流程集成验证] 慢 步骤=%d 描述=%s 过场标题=[%s] 发车=[%s] 阶段=[%s]",
-                    stepIndex + 1, step.desc, Text("boardingTitle"),
-                    tostring(Has("preDriveStart")), Text("phaseLabel")))
-            end
             if waited >= STEP_TIMEOUT then
                 Check(false, step.desc .. "（等待超时）")
                 print(string.format("[流程集成验证] 超时 步骤=%d/%d 描述=%s 机会=%s",

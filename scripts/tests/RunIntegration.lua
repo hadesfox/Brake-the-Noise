@@ -44,6 +44,12 @@ local function Has(id)
     return UI.FindById(id) ~= nil
 end
 
+local function Disabled(id)
+    local button = UI.FindById(id) --[[@as Button?]]
+    assert(button, "找不到按钮 " .. id)
+    return button:IsDisabled()
+end
+
 local function Click(id)
     local widget = UI.FindById(id)
     assert(widget, "找不到可点控件 " .. id)
@@ -127,6 +133,12 @@ local function BuildSteps()
     Step("进入驾驶舱", function()
         if Has("menuStart") then Click("menuStart") return false end
         if Has("prepConfirm") then Click("prepConfirm") return false end
+        -- 上车过场：连按空格推进；走完会自动切到发车前准备。
+        if Has("boardingTitle") then
+            Tap(KEY_SPACE)
+            return false
+        end
+        if Has("preDriveStart") then Click("preDriveStart") return false end
         return Has("cockpitChance")
     end)
     Step("开局为落点轮且机会 0/3", function()
@@ -166,17 +178,32 @@ local function BuildSteps()
         Pointer(false, "touch", MOUSEB_LEFT)
         return true
     end)
-    Step("结算后回到落点轮", function()
-        Check(InLanding(), "结算后回到落点轮")
-        Check(ChanceCount() == 1, "完成一次后机会 1/3")
+    Step("结算后进入选择界面", function()
+        Check(Has("decisionContinue"), "结算后进入选择界面")
+        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "完成一次后机会 1/3")
         return true
     end)
     Step("长按 Repeat 不重复结算", function()
-        -- 落点轮里长按不应因为 Repeat 而推进两次。
+        -- 选择界面上长按空格不应重复触发任何动作。
         KeyDown(true)
-        Check(InLanding(), "长按 Repeat 不推进")
+        Check(Has("decisionContinue"), "长按 Repeat 不重复结算")
         KeyUp()
         return true
+    end)
+    Step("回到发车前准备再测一次", function()
+        if Has("preDriveStart") then return true end
+        if Has("decisionContinue") then
+            Click("decisionContinue")
+            return false
+        end
+        return Has("cockpitChance")
+    end)
+    Step("点火加速回到刹车时刻", function()
+        if Has("preDriveStart") then
+            Click("preDriveStart")
+            return false
+        end
+        return Has("cockpitChance")
     end)
     Step("失焦进入暂停", function()
         Focus(false)
@@ -185,13 +212,13 @@ local function BuildSteps()
     Step("暂停期间不响应确认", function()
         Tap(KEY_SPACE)
         Check(InLanding(), "暂停期间不响应确认")
-        Check(ChanceCount() == 1, "暂停期间机会不变")
         return true
     end)
     Step("恢复后仍可继续", function()
         Focus(true)
         return InLanding()
     end)
+    -- 一次测试结束后进入独立选择界面；"继续测试"要重新走发车前准备与加速。
     -- 落点确认与力度确认必须在不同帧：它们各自占一次 ActionGate 帧号。
     Step("第 2 次落点确认", function()
         if not InLanding() then return false end
@@ -200,17 +227,39 @@ local function BuildSteps()
     end)
     Step("第 2 次力度结算", function()
         Tap(KEY_SPACE)
-        if not InLanding() then return false end
-        Check(ChanceCount() == 2, "完成第 2 次后机会 2/3")
+        return Has("decisionContinue")
+    end)
+    Step("第二次后机会 2/3", function()
+        Check(Text("decisionSummary"):find("2 / 3", 1, true) ~= nil, "完成第 2 次后机会 2/3")
         return true
+    end)
+    Step("继续测试回到发车前准备", function()
+        if Has("preDriveStart") then return true end
+        Click("decisionContinue")
+        return Has("preDriveStart")
+    end)
+    Step("第 3 次点火加速", function()
+        if Has("preDriveStart") then
+            Click("preDriveStart")
+            return false
+        end
+        return Has("cockpitChance")
     end)
     Step("第 3 次落点确认", function()
         if not InLanding() then return false end
         Tap(KEY_SPACE)
         return InForce()
     end)
-    Step("第 3 次力度结算后必须发帖", function()
+    Step("第 3 次力度结算", function()
         Tap(KEY_SPACE)
+        return Has("decisionContinue")
+    end)
+    Step("第三次后继续测试被禁用", function()
+        Check(Disabled("decisionContinue"), "第三次后继续测试被禁用")
+        return true
+    end)
+    Step("发帖进入出口", function()
+        Click("decisionPost")
         return Has("noticeBack")
     end)
     Step("发帖出口已离开驾驶舱", function()
