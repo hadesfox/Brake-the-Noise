@@ -1,0 +1,98 @@
+{
+    "version": 2,
+    "script": "tests/RunVehiclePhysics.lua",
+    "result": "FAIL",
+    "duration_ms": 23582,
+    "frames_completed": 1400,
+    "phases": {
+        "load": {
+            "result": "PASS",
+            "errors": []
+        },
+        "init": {
+            "result": "PASS",
+            "errors": []
+        },
+        "run": {
+            "result": "FAIL",
+            "errors": [
+                {
+                    "category": "lua",
+                    "message": "[2026-10-15 15_10_04_024][363]ERROR[MPV测试失败] 车身离地且未托底: modelY=-0.158 底盘接地次数=665",
+                    "frame": 360
+                }
+            ]
+        },
+        "scene": {
+            "result": "PASS",
+            "errors": [],
+            "node_count": 28,
+            "component_count": 36,
+            "scene_exists": true
+        }
+    },
+    "state_snapshots": [
+        {
+            "frame": 1,
+            "phase": "init",
+            "nodes": 20,
+            "components": 28,
+            "hash": 2209652575,
+            "frame_time_ms": 296.88299560546877
+        },
+        {
+            "frame": 10,
+            "phase": "run",
+            "nodes": 20,
+            "components": 28,
+            "hash": 762160367,
+            "frame_time_ms": 16.615999221801759
+        },
+        {
+            "frame": 700,
+            "phase": "run",
+            "nodes": 20,
+            "components": 28,
+            "hash": 325756346,
+            "frame_time_ms": 16.617000579833986
+        },
+        {
+            "frame": 1400,
+            "phase": "run",
+            "nodes": 20,
+            "components": 28,
+            "hash": 1365883675,
+            "frame_time_ms": 16.618999481201173
+        }
+    ],
+    "scene_stalled": false,
+    "max_frame_time_ms": 23.187999725341798,
+    "update_defined": false,
+    "component_census": {
+        "Octree": 1,
+        "DebugRenderer": 1,
+        "PhysicsWorld": 1,
+        "Zone": 1,
+        "Light": 1,
+        "RigidBody": 4,
+        "CollisionShape": 6,
+        "StaticModel": 19,
+        "RaycastVehicle": 1,
+        "Camera": 1
+    },
+    "test_result": "NOT_RUN",
+    "test_assertions": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0
+    },
+    "test_issues": [],
+    "missing_resources": [],
+    "missing_engine_resources": [],
+    "summary": {
+        "lua_errors": 1,
+        "resource_errors": 0,
+        "engine_errors": 0,
+        "total_errors": 1
+    }
+}

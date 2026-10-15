@@ -1,0 +1,882 @@
+{
+  "limitations": [
+    "射线轮胎没有独立轮胎侧壁碰撞",
+    "简化外部车身凸盒不支持车内人员碰撞",
+    "未验证多人同步、高速工况或移动端性能"
+  ],
+  "snapshots": [
+    {
+      "origin": [
+        2.7596669394114315e-10,
+        -0.09789776802062988,
+        -0.0035897474735975266
+      ],
+      "phase": "落地稳定性",
+      "step": 120,
+      "wheels": [
+        {
+          "contactY": 9.072571992874146e-05,
+          "length": 0.3241735100746155,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.43119674921035767
+        },
+        {
+          "contactY": 9.072571992874146e-05,
+          "length": 0.3241735100746155,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.43119674921035767
+        },
+        {
+          "contactY": 2.6304274797439575e-05,
+          "length": 0.4023507833480835,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4288986623287201
+        },
+        {
+          "contactY": 2.6304274797439575e-05,
+          "length": 0.4023507833480835,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4288986623287201
+        }
+      ],
+      "velocity": 0.26207882165908813
+    },
+    {
+      "origin": [
+        2.8444439692520973e-08,
+        -0.08178246021270752,
+        -0.002882443368434906
+      ],
+      "phase": "落地稳定性",
+      "step": 240,
+      "wheels": [
+        {
+          "contactY": 3.180652856826782e-05,
+          "length": 0.3588559925556183,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42906081676483154
+        },
+        {
+          "contactY": 3.177672624588013e-05,
+          "length": 0.35885611176490784,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42906081676483154
+        },
+        {
+          "contactY": 2.6378780603408813e-05,
+          "length": 0.400882363319397,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42904046177864075
+        },
+        {
+          "contactY": 2.639368176460266e-05,
+          "length": 0.4008824825286865,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42904046177864075
+        }
+      ],
+      "velocity": 0.08239319920539856
+    },
+    {
+      "origin": [
+        -2.781710009003291e-07,
+        -0.08179008960723877,
+        -0.00288541242480278
+      ],
+      "phase": "落地稳定性",
+      "step": 360,
+      "wheels": [
+        {
+          "contactY": 3.3549964427948e-05,
+          "length": 0.3588777184486389,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42900070548057556
+        },
+        {
+          "contactY": 4.486739635467529e-05,
+          "length": 0.3588707447052002,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290120303630829
+        },
+        {
+          "contactY": 6.907060742378235e-05,
+          "length": 0.4009073078632355,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290362298488617
+        },
+        {
+          "contactY": 3.298744559288025e-05,
+          "length": 0.40094780921936035,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290001094341278
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -2.781710009003291e-07,
+        -0.08179008960723877,
+        -0.00288541242480278
+      ],
+      "phase": "落地稳定性",
+      "step": 480,
+      "wheels": [
+        {
+          "contactY": 3.3549964427948e-05,
+          "length": 0.3588777184486389,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42900070548057556
+        },
+        {
+          "contactY": 4.486739635467529e-05,
+          "length": 0.3588707447052002,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290120303630829
+        },
+        {
+          "contactY": 6.907060742378235e-05,
+          "length": 0.4009073078632355,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290362298488617
+        },
+        {
+          "contactY": 3.298744559288025e-05,
+          "length": 0.40094780921936035,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290001094341278
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -2.781710009003291e-07,
+        -0.08179008960723877,
+        -0.00288541242480278
+      ],
+      "phase": "落地稳定性",
+      "step": 600,
+      "wheels": [
+        {
+          "contactY": 3.3549964427948e-05,
+          "length": 0.3588777184486389,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42900070548057556
+        },
+        {
+          "contactY": 4.486739635467529e-05,
+          "length": 0.3588707447052002,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290120303630829
+        },
+        {
+          "contactY": 6.907060742378235e-05,
+          "length": 0.4009073078632355,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290362298488617
+        },
+        {
+          "contactY": 3.298744559288025e-05,
+          "length": 0.40094780921936035,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290001094341278
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -2.781710009003291e-07,
+        -0.08179008960723877,
+        -0.00288541242480278
+      ],
+      "phase": "落地稳定性",
+      "step": 720,
+      "wheels": [
+        {
+          "contactY": 3.3549964427948e-05,
+          "length": 0.3588777184486389,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42900070548057556
+        },
+        {
+          "contactY": 4.486739635467529e-05,
+          "length": 0.3588707447052002,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290120303630829
+        },
+        {
+          "contactY": 6.907060742378235e-05,
+          "length": 0.4009073078632355,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290362298488617
+        },
+        {
+          "contactY": 3.298744559288025e-05,
+          "length": 0.40094780921936035,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290001094341278
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -0.015659566968679428,
+        -0.07625031471252441,
+        -0.0029176631942391396
+      ],
+      "phase": "单轮台阶受压",
+      "step": 840,
+      "wheels": [
+        {
+          "contactY": 0.18000346422195435,
+          "length": 0.20000001788139343,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.6053563356399536
+        },
+        {
+          "contactY": 4.503875970840454e-05,
+          "length": 0.36399272084236145,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4294235408306122
+        },
+        {
+          "contactY": 2.917274832725525e-05,
+          "length": 0.4058432877063751,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4292331635951996
+        },
+        {
+          "contactY": 8.488073945045471e-05,
+          "length": 0.3942927122116089,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42883408069610596
+        }
+      ],
+      "velocity": 0.12883113324642181
+    },
+    {
+      "origin": [
+        -0.015080469660460949,
+        -0.07877010107040405,
+        -0.003198537975549698
+      ],
+      "phase": "单轮台阶受压",
+      "step": 960,
+      "wheels": [
+        {
+          "contactY": 0.1800030767917633,
+          "length": 0.19999998807907104,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.5970149636268616
+        },
+        {
+          "contactY": 3.055483102798462e-05,
+          "length": 0.36119920015335083,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42910727858543396
+        },
+        {
+          "contactY": 0.00014634430408477783,
+          "length": 0.4043438136577606,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290289580821991
+        },
+        {
+          "contactY": 2.3420900106430054e-05,
+          "length": 0.39762061834335327,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42903319001197815
+        }
+      ],
+      "velocity": 0.08831027150154114
+    },
+    {
+      "origin": [
+        -0.01508912444114685,
+        -0.07872796058654785,
+        -0.0031950874254107475
+      ],
+      "phase": "单轮台阶受压",
+      "step": 1080,
+      "wheels": [
+        {
+          "contactY": 0.18000313639640808,
+          "length": 0.20000003278255463,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.5971329212188721
+        },
+        {
+          "contactY": 7.45728611946106e-05,
+          "length": 0.36130884289741516,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42904791235923767
+        },
+        {
+          "contactY": 7.040798664093018e-06,
+          "length": 0.4044235646724701,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42898038029670715
+        },
+        {
+          "contactY": 5.89713454246521e-05,
+          "length": 0.39758509397506714,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42903226613998413
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -0.01508912444114685,
+        -0.07872796058654785,
+        -0.0031950874254107475
+      ],
+      "phase": "单轮台阶受压",
+      "step": 1200,
+      "wheels": [
+        {
+          "contactY": 0.18000313639640808,
+          "length": 0.20000003278255463,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.5971329212188721
+        },
+        {
+          "contactY": 7.45728611946106e-05,
+          "length": 0.36130884289741516,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42904791235923767
+        },
+        {
+          "contactY": 7.040798664093018e-06,
+          "length": 0.4044235646724701,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42898038029670715
+        },
+        {
+          "contactY": 5.89713454246521e-05,
+          "length": 0.39758509397506714,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42903226613998413
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -0.01508912444114685,
+        -0.07872796058654785,
+        -0.0031950874254107475
+      ],
+      "phase": "单轮台阶受压",
+      "step": 1320,
+      "wheels": [
+        {
+          "contactY": 0.18000313639640808,
+          "length": 0.20000003278255463,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.5971329212188721
+        },
+        {
+          "contactY": 7.45728611946106e-05,
+          "length": 0.36130884289741516,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42904791235923767
+        },
+        {
+          "contactY": 7.040798664093018e-06,
+          "length": 0.4044235646724701,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42898038029670715
+        },
+        {
+          "contactY": 5.89713454246521e-05,
+          "length": 0.39758509397506714,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42903226613998413
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -3.2532057048229035e-08,
+        -0.12560760974884033,
+        -0.0076325275003910065
+      ],
+      "phase": "离地与回弹",
+      "step": 1440,
+      "wheels": [
+        {
+          "contactY": 0.00011004507541656494,
+          "length": 0.2688358724117279,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.43094679713249207
+        },
+        {
+          "contactY": 0.00011004507541656494,
+          "length": 0.2688358724117279,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.43094679713249207
+        },
+        {
+          "contactY": 1.860782504081726e-05,
+          "length": 0.4038754105567932,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42897242307662964
+        },
+        {
+          "contactY": 1.860782504081726e-05,
+          "length": 0.4038754105567932,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42897242307662964
+        }
+      ],
+      "velocity": 0.26805663108825684
+    },
+    {
+      "origin": [
+        6.603474957955768e-07,
+        -0.08202111721038818,
+        -0.0050569213926792145
+      ],
+      "phase": "离地与回弹",
+      "step": 1560,
+      "wheels": [
+        {
+          "contactY": 3.133714199066162e-05,
+          "length": 0.35817694664001465,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42910057306289673
+        },
+        {
+          "contactY": 4.2766332626342773e-05,
+          "length": 0.3582405149936676,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290366470813751
+        },
+        {
+          "contactY": 7.568299770355225e-05,
+          "length": 0.4011136591434479,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4289977252483368
+        },
+        {
+          "contactY": 0.00011309236288070679,
+          "length": 0.40107473731040955,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290362298488617
+        }
+      ],
+      "velocity": 0.08505882322788239
+    },
+    {
+      "origin": [
+        1.7195040982187493e-06,
+        -0.08181631565093994,
+        -0.005045616067945957
+      ],
+      "phase": "离地与回弹",
+      "step": 1680,
+      "wheels": [
+        {
+          "contactY": 1.3045966625213623e-05,
+          "length": 0.358832985162735,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4289800524711609
+        },
+        {
+          "contactY": 8.37370753288269e-05,
+          "length": 0.3587658703327179,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290507435798645
+        },
+        {
+          "contactY": 3.5215169191360474e-05,
+          "length": 0.4009576439857483,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290022552013397
+        },
+        {
+          "contactY": 3.157183527946472e-05,
+          "length": 0.4009648561477661,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4289986193180084
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        1.7195040982187493e-06,
+        -0.08181631565093994,
+        -0.005045616067945957
+      ],
+      "phase": "离地与回弹",
+      "step": 1800,
+      "wheels": [
+        {
+          "contactY": 1.3045966625213623e-05,
+          "length": 0.358832985162735,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4289800524711609
+        },
+        {
+          "contactY": 8.37370753288269e-05,
+          "length": 0.3587658703327179,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290507435798645
+        },
+        {
+          "contactY": 3.5215169191360474e-05,
+          "length": 0.4009576439857483,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290022552013397
+        },
+        {
+          "contactY": 3.157183527946472e-05,
+          "length": 0.4009648561477661,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4289986193180084
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        1.7195040982187493e-06,
+        -0.08181631565093994,
+        -0.005045616067945957
+      ],
+      "phase": "离地与回弹",
+      "step": 1920,
+      "wheels": [
+        {
+          "contactY": 1.3045966625213623e-05,
+          "length": 0.358832985162735,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4289800524711609
+        },
+        {
+          "contactY": 8.37370753288269e-05,
+          "length": 0.3587658703327179,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290507435798645
+        },
+        {
+          "contactY": 3.5215169191360474e-05,
+          "length": 0.4009576439857483,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290022552013397
+        },
+        {
+          "contactY": 3.157183527946472e-05,
+          "length": 0.4009648561477661,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4289986193180084
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        1.7195040982187493e-06,
+        -0.08181631565093994,
+        -0.005045616067945957
+      ],
+      "phase": "离地与回弹",
+      "step": 2040,
+      "wheels": [
+        {
+          "contactY": 1.3045966625213623e-05,
+          "length": 0.358832985162735,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4289800524711609
+        },
+        {
+          "contactY": 8.37370753288269e-05,
+          "length": 0.3587658703327179,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290507435798645
+        },
+        {
+          "contactY": 3.5215169191360474e-05,
+          "length": 0.4009576439857483,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290022552013397
+        },
+        {
+          "contactY": 3.157183527946472e-05,
+          "length": 0.4009648561477661,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4289986193180084
+        }
+      ],
+      "velocity": 0
+    },
+    {
+      "origin": [
+        -1.1893943110408145e-06,
+        -0.08190947771072388,
+        1.9380155801773071
+      ],
+      "phase": "车身撞墙阻挡",
+      "step": 2160,
+      "wheels": [
+        {
+          "contactY": 4.2319297790527344e-05,
+          "length": 0.3590776324272156,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4290025234222412
+        },
+        {
+          "contactY": 2.9549002647399902e-05,
+          "length": 0.3590977191925049,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42897599935531616
+        },
+        {
+          "contactY": 4.712492227554321e-05,
+          "length": 0.4004250168800354,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290681779384613
+        },
+        {
+          "contactY": 7.714703679084778e-05,
+          "length": 0.4004235863685608,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42906317114830017
+        }
+      ],
+      "velocity": 0.31696033477783203
+    },
+    {
+      "origin": [
+        1.5778627471263462e-07,
+        -0.08180505037307739,
+        1.6438730955123901
+      ],
+      "phase": "车身撞墙阻挡",
+      "step": 2280,
+      "wheels": [
+        {
+          "contactY": 5.061924457550049e-05,
+          "length": 0.3588513433933258,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.4289877116680145
+        },
+        {
+          "contactY": 3.743171691894531e-05,
+          "length": 0.35881733894348145,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.4290231168270111
+        },
+        {
+          "contactY": 3.436580300331116e-05,
+          "length": 0.4009307324886322,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.42902693152427673
+        },
+        {
+          "contactY": 0.00010882318019866943,
+          "length": 0.40087243914604187,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.4290865957736969
+        }
+      ],
+      "velocity": 0.2935921847820282
+    },
+    {
+      "origin": [
+        -9.787352155399276e-07,
+        -0.08180373907089233,
+        1.521647572517395
+      ],
+      "phase": "车身撞墙阻挡",
+      "step": 2400,
+      "wheels": [
+        {
+          "contactY": 3.138929605484009e-05,
+          "length": 0.35884225368499756,
+          "name": "WheelFrontLeft",
+          "grounded": true,
+          "y": 0.42899850010871887
+        },
+        {
+          "contactY": 9.394437074661255e-05,
+          "length": 0.3587806522846222,
+          "name": "WheelFrontRight",
+          "grounded": true,
+          "y": 0.42906102538108826
+        },
+        {
+          "contactY": 3.721192479133606e-05,
+          "length": 0.4009547531604767,
+          "name": "WheelRearLeft",
+          "grounded": true,
+          "y": 0.4290042817592621
+        },
+        {
+          "contactY": 3.0506402254104614e-05,
+          "length": 0.40096232295036316,
+          "name": "WheelRearRight",
+          "grounded": true,
+          "y": 0.42899760603904724
+        }
+      ],
+      "velocity": 0
+    }
+  ],
+  "chassis_floor_contacts": 14,
+  "suspension": {
+    "damping_relaxation": 4.4,
+    "rest_length_m": 0.45,
+    "stiffness": 35,
+    "maximum_observed_spread_m": 0.20442353188991547,
+    "damping_compression": 2.8
+  },
+  "wall_contacts": 6,
+  "checks": [
+    {
+      "name": "引擎加载模型及材质",
+      "passed": true,
+      "detail": "16模型、61材质槽"
+    },
+    {
+      "name": "左舵及四轮连接点",
+      "passed": true,
+      "detail": "左舵与连接点断言通过"
+    },
+    {
+      "name": "静置四轮接地",
+      "passed": true,
+      "detail": "接地4/4"
+    },
+    {
+      "name": "静置车身离地且未托底",
+      "passed": true,
+      "detail": "modelY=-0.082 稳定阶段托底0次；落地瞬态接触7次"
+    },
+    {
+      "name": "悬挂有压缩且稳定",
+      "passed": true,
+      "detail": "长度0.359..0.401 波动0.0000"
+    },
+    {
+      "name": "单轮台阶独立响应",
+      "passed": true,
+      "detail": "最大长度差0.204m"
+    },
+    {
+      "name": "台阶后保持接地",
+      "passed": true,
+      "detail": "接地4/4"
+    },
+    {
+      "name": "离地伸展且无假接地",
+      "passed": true,
+      "detail": "离地有效步数 12"
+    },
+    {
+      "name": "落地阻尼恢复",
+      "passed": true,
+      "detail": "接地4/4 速度0.000"
+    },
+    {
+      "name": "车身碰撞事件",
+      "passed": true,
+      "detail": "撞墙事件 6"
+    },
+    {
+      "name": "撞墙阻挡不穿透",
+      "passed": true,
+      "detail": "modelZ最大2.113；墙近端4.75m"
+    }
+  ],
+  "result": "PASS",
+  "heavy_load_limit": "2400kg实测前轴超出每轮6000N原生支撑上限，托底；1800kg通过不代表重载通过",
+  "loaded_models": 16,
+  "test_mass_kg": 1800,
+  "physics_steps": 2400,
+  "resting_chassis_floor_contacts": 0,
+  "loaded_material_slots": 61
+}
