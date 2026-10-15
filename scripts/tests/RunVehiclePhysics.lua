@@ -113,14 +113,34 @@ local function Finish()
         limitations = { "射线轮胎没有独立轮胎侧壁碰撞", "简化外部车身凸盒不支持车内人员碰撞",
             "未验证多人同步、高速工况或移动端性能" },
     }
-    local file = File(GetContext(), "mpv-physics-report.json", FILE_WRITE)
-    if file:IsOpen() then
-        file:WriteString(cjson.encode(report))
-        file:Close()
-    end
-    print("[MPV_REPORT] " .. cjson.encode(report))
+    local reportJSON = cjson.encode(report)
+    -- 报告先输出到日志；文件保存失败不能中断测试完成流程。
+    print("[MPV_REPORT] " .. reportJSON)
     phase = 5
-    print(string.format("[MPV测试] 完成 %d项，失败%d项；报告 mpv-physics-report.json", #checks, failed))
+
+    ---@type File?
+    local file
+    local saved, saveError = pcall(function()
+        -- 脚本File构造不接收Context；沙箱不可用时也可能返回nil。
+        file = File("mpv-physics-report.json", FILE_WRITE)
+        if not file then return false end
+        if not file:IsOpen() then return false end
+        return file:WriteString(reportJSON)
+    end)
+    if file then
+        local disposed, disposeError = pcall(function() file:Dispose() end)
+        if not disposed then
+            print("[MPV报告] 文件释放失败：" .. tostring(disposeError))
+        end
+    end
+    local reportLocation = "已输出到日志"
+    if saved and saveError == true then
+        reportLocation = "已保存 mpv-physics-report.json，并输出到日志"
+    else
+        local reason = saved and "文件创建、打开或写入未成功" or tostring(saveError)
+        print("[MPV报告] 本地保存未成功，结果保留在日志：" .. reason)
+    end
+    print(string.format("[MPV测试] 完成 %d项，失败%d项；报告%s", #checks, failed, reportLocation))
 end
 
 local function SetupScene()
