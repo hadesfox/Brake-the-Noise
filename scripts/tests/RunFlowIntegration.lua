@@ -99,33 +99,72 @@ local function BuildSteps()
     Act("进入角色准备", function() Click("menuStart") end)
     Expect("角色准备列出鞋型", function() return Has("prepShoe2") end)
     Act("选择第二双鞋并确认", function() Click("prepShoe2"); Click("prepConfirm") end)
-    Expect("进入驾驶舱", function() return Has("cockpitChance") end)
-    Expect("开局机会为 0/3", function() return Text("cockpitChance"):find("0 / 3", 1, true) ~= nil end)
-    Expect("开局为第一台车", function() return Text("cockpitVehicle"):find("第 1 台", 1, true) ~= nil end)
-    Expect("驾驶舱显示天气", function() return Text("cockpitWeather") ~= "" end)
-    Expect("未测试前发帖被禁用", function() return Disabled("cockpitPost") end)
 
-    -- 第 1 次测试：落点按停 → 力度按停。
+    -- 上车过场：三段占位，空格推进，走完自动进入发车前准备。
+    Expect("进入上车过场", function() return Has("boardingTitle") end)
+    Expect("过场标题为上车", function() return Text("boardingTitle") == "上车" end)
+    Expect("过场显示天气与鞋型",
+        function() return Text("boardingLine"):find("鞋型", 1, true) ~= nil
+            or Text("boardingLine"):find("天气", 1, true) ~= nil end)
+    Act("推进过场第 1 段", function() Tap(KEY_SPACE) end)
+    Expect("过场推进到第 2 段",
+        function() return Text("boardingTitle") == "坐定" or not Has("boardingTitle") end)
+    Act("推进过场第 2 段", function() Tap(KEY_SPACE) end)
+    Expect("过场推进到第 3 段", function() return Text("boardingTitle") == "准备" end)
+    Act("推进过场第 3 段", function() Tap(KEY_SPACE) end)
+
+    -- 发车前准备：空调与座椅可操作，点火后进入加速。
+    Expect("进入发车前准备", function() return Has("preDriveStart") end)
+    Expect("空调默认关", function() return Text("preDriveAc") == "空调：关" end)
+    Act("打开空调", function() Click("preDriveAcBtn") end)
+    Expect("空调已打开", function() return Text("preDriveAc") == "空调：开" end)
+    Act("点火加速", function() Click("preDriveStart") end)
+    -- 加速阶段很短，逐帧采样可能错过中间态；直接等它自动进入刹车时刻。
+    Expect("加速到时速 100 后进入刹车时刻",
+        function() return Has("cockpitChance") end)
+
+    Expect("驾驶舱机会为 0/3", function() return Text("cockpitChance"):find("0 / 3", 1, true) ~= nil end)
+    Expect("驾驶舱为第一台车", function() return Text("cockpitVehicle"):find("第 1 台", 1, true) ~= nil end)
+    Expect("未测试前发帖被禁用", function() return Has("cockpitPost") end)
+
+    -- 第 1 次测试：落点按停 → 力度按停 → 选择界面。
     Act("第 1 次落点按停", function() Tap(KEY_SPACE) end)
     Expect("进入第二轮力度", function() return Text("demoReading"):find("力度", 1, true) ~= nil end)
     Act("第 1 次力度按停", function() Tap(KEY_SPACE) end)
-    Expect("完成一次后机会 1/3", function() return Text("cockpitChance"):find("1 / 3", 1, true) ~= nil end)
-    Expect("第一次后可提前发帖", function() return not Disabled("cockpitPost") end)
-    Expect("发帖入口提示提前发帖",
-        function() return Text("cockpitPost"):find("提前发帖", 1, true) ~= nil end)
+    Expect("进入测试后选择界面", function() return Has("decisionContinue") end)
+    Expect("第一次后可提前发帖",
+        function() return Text("decisionPost"):find("提前发帖", 1, true) ~= nil end)
+    Expect("选择界面显示已用机会 1/3",
+        function() return Text("decisionSummary"):find("1 / 3", 1, true) ~= nil end)
+    Expect("换车在未断裂时不可用", function() return Disabled("decisionVehicle") end)
 
-    -- 第 2 次测试。
+    -- 继续测试：回到发车前准备，再走一次加速与刹车时刻。
+    Act("继续测试", function() Click("decisionContinue") end)
+    Expect("继续测试回到发车前准备", function() return Has("preDriveStart") end)
+    Act("再次点火加速", function() Click("preDriveStart") end)
+    Expect("再次进入刹车时刻", function() return Has("cockpitChance") end)
     Act("第 2 次落点按停", function() Tap(KEY_SPACE) end)
     Expect("第 2 次进入力度", function() return Text("demoReading"):find("力度", 1, true) ~= nil end)
     Act("第 2 次力度按停", function() Tap(KEY_SPACE) end)
-    Expect("完成两次后机会 2/3", function() return Text("cockpitChance"):find("2 / 3", 1, true) ~= nil end)
+    Expect("第二次后机会 2/3",
+        function() return Text("decisionSummary"):find("2 / 3", 1, true) ~= nil end)
 
-    -- 第 3 次测试：结束后必须发帖，离开驾驶舱。
+    -- 第 3 次测试：结束后必须发帖，"继续测试"不可用。
+    Act("第 3 次继续测试", function() Click("decisionContinue") end)
+    Expect("第 3 次回到发车前准备", function() return Has("preDriveStart") end)
+    Act("第 3 次点火加速", function() Click("preDriveStart") end)
+    Expect("第 3 次进入刹车时刻", function() return Has("cockpitChance") end)
     Act("第 3 次落点按停", function() Tap(KEY_SPACE) end)
     Expect("第 3 次进入力度", function() return Text("demoReading"):find("力度", 1, true) ~= nil end)
     Act("第 3 次力度按停", function() Tap(KEY_SPACE) end)
-    Expect("第三次后进入发帖出口", function() return Has("noticeBack") end)
-    Expect("已离开驾驶舱", function() return not Has("cockpitChance") end)
+    Expect("第三次后必须发帖", function() return Has("decisionContinue") end)
+    Expect("第三次后继续测试被禁用", function() return Disabled("decisionContinue") end)
+    Expect("第三次后发帖按钮提示必须",
+        function() return Text("decisionPost"):find("必须", 1, true) ~= nil end)
+
+    -- 发帖出口（D3 未实现）。
+    Act("发帖", function() Click("decisionPost") end)
+    Expect("进入发帖出口", function() return Has("noticeBack") end)
     Act("发帖出口返回主界面", function() Click("noticeBack") end)
     Expect("回到主界面", function() return Has("menuStart") end)
 
@@ -162,6 +201,11 @@ function HandleFlowTest()
             waited = 0
         else
             waited = waited + 1
+            if waited == 60 then
+                print(string.format("[流程集成验证] 慢 步骤=%d 描述=%s 过场标题=[%s] 发车=[%s] 阶段=[%s]",
+                    stepIndex + 1, step.desc, Text("boardingTitle"),
+                    tostring(Has("preDriveStart")), Text("phaseLabel")))
+            end
             if waited >= STEP_TIMEOUT then
                 Check(false, step.desc .. "（等待超时）")
                 print(string.format("[流程集成验证] 超时 步骤=%d/%d 描述=%s 机会=%s",

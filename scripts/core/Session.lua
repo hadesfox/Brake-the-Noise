@@ -68,12 +68,18 @@ SessionFlow.BREAK_ROD = "rod_break"
 ---@field clothing SessionOutfit[]
 ---@field trousers SessionOutfit[]
 
+---@class SessionPreDriveConfig
+---@field ac table<string, any>
+---@field seat table<string, any>
+
 ---@class SessionFlowConfig
 ---@field version string
 ---@field maxTests integer
 ---@field outcomePolicy table<string, string>
 ---@field character SessionCharacter
 ---@field weather SessionWeather[]
+---@field preDrive SessionPreDriveConfig
+---@field acceleration AccelerationConfig
 
 local function IsFinite(value)
     return type(value) == "number" and value == value and value ~= math.huge and value ~= -math.huge
@@ -109,6 +115,17 @@ local function ValidateFlow(flow)
     for _, weather in ipairs(flow.weather) do
         assert(type(weather.id) == "string" and weather.id ~= "", "天气缺少 id")
     end
+    -- 发车前准备与加速阶段：骨架阶段必须有可用的占位结构，否则页面无法构建。
+    assert(type(flow.preDrive) == "table", "缺少发车前准备配置")
+    assert(type(flow.preDrive.ac) == "table" and type(flow.preDrive.ac.on) == "boolean",
+        "空调占位配置缺少 on")
+    assert(type(flow.preDrive.seat) == "table" and type(flow.preDrive.seat.position) == "number",
+        "座椅占位配置缺少 position")
+    assert(type(flow.acceleration) == "table", "缺少加速阶段配置")
+    assert(type(flow.acceleration.durationSeconds) == "number" and flow.acceleration.durationSeconds > 0,
+        "加速时长必须是正数")
+    assert(type(flow.acceleration.targetSpeed) == "number" and flow.acceleration.targetSpeed > 0,
+        "目标时速必须是正数")
 end
 
 ---@param entry SessionTestEntry

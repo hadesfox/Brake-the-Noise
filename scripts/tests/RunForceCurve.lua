@@ -7,6 +7,7 @@ function Start()
         require("tests.ContactMapping").Run()
         require("tests.ForceCurve").Run()
         require("tests.Session").Run()
+        require("tests.Acceleration").Run()
     end)
     if not ok then log:Write(LOG_ERROR, tostring(err)) end
     engine:Exit()

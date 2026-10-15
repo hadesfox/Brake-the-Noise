@@ -19,14 +19,22 @@ local Lever = require("gameplay.Lever")
 local ActionGate = require("core.ActionGate")
 local MainMenu = require("ui.MainMenu")
 local CharacterPrep = require("ui.CharacterPrep")
+local Boarding = require("ui.Boarding")
+local PreDrive = require("ui.PreDrive")
 local Cockpit = require("ui.Cockpit")
+local Decision = require("ui.Decision")
 local Archive = require("ui.Archive")
 local BrakeTestDemo = require("ui.BrakeTestDemo")
 
--- 场景名。骨架阶段只有这些；发帖、清算、洪流、结局尚未实现。
+-- 场景名。骨架阶段的真实页面顺序：
+--   主界面 → 角色准备 → 上车过场 → 开车前准备 → 刹车时刻（判定）→ 发帖出口。
+-- 清算、洪流、结局、档案仍为说明页或未实现。
 local SCENE_MENU = "menu"
 local SCENE_PREP = "prep"
+local SCENE_BOARDING = "boarding"
+local SCENE_PREDRIVE = "predrive"
 local SCENE_COCKPIT = "cockpit"
+local SCENE_DECISION = "decision"
 local SCENE_ARCHIVE = "archive"
 local SCENE_NOTICE = "notice"
 
@@ -46,11 +54,18 @@ local scene = SCENE_MENU
 local phase = BrakeTestDemo.PHASE_LANDING
 ---@type CockpitView?
 local cockpitView = nil
+---@type BoardingView?
+local boardingView = nil
+---@type PreDriveView?
+local preDriveView = nil
 ---@type LandingRecord?
 local landingRecord = nil
 -- 踩空/踩油门后停在的占位状态；非空时不再接受测试输入。
 ---@type string?
 local pendingOutcome = nil
+-- 角色准备的选择结果；上车过场与开车前准备都会用到。
+---@type PrepSelection?
+local prepSelection = nil
 -- 场景切换延迟到下一帧执行：避免在控件自己的事件回调里销毁控件树。
 ---@type fun()?
 local deferredAction = nil
@@ -116,6 +131,9 @@ end
 function GoToMenu()
     scene = SCENE_MENU
     cockpitView = nil
+    boardingView = nil
+    preDriveView = nil
+    prepSelection = nil
     pendingOutcome = nil
     landingRecord = nil
     gate:ClearHeld()
@@ -135,6 +153,7 @@ function StartTest()
     phase = BrakeTestDemo.PHASE_LANDING
     landingRecord = nil
     pendingOutcome = nil
+    prepSelection = nil
     gate:ClearHeld()
     scene = SCENE_PREP
     local prep = CharacterPrep.Create(FlowConfig, DemoConfig.landing.shoes,
@@ -149,10 +168,40 @@ end
 function OnPrepConfirm(selection)
     if not landing or not session then return end
     landing:SelectShoe(selection.shoeIndex)
+    prepSelection = selection
+    local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
+    local clothing = assert(FlowConfig.character.clothing[selection.clothingIndex], "上衣索引无效")
+    local trousers = assert(FlowConfig.character.trousers[selection.trousersIndex], "裤子索引无效")
+    print(string.format("[会话] 角色确定 鞋=%s 上衣=%s 裤子=%s",
+        shoe.id, clothing.id, trousers.id))
+    -- 角色确定后先走过场，再进发车前准备。
+    scene = SCENE_BOARDING
+    boardingView = Boarding.Create(session:Weather(), shoe.name)
+    SetSceneRoot(boardingView.root)
+end
+
+function GoToPreDrive()
+    if not session or not landing then return end
+    local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
+    scene = SCENE_PREDRIVE
+    boardingView = nil
+    preDriveView = PreDrive.Create(FlowConfig, session:Weather(), shoe.name,
+        function(selection) Defer(function() OnBrakeTime(selection) end) end)
+    SetSceneRoot(preDriveView.root)
+    print("[会话] 进入发车前准备；空调与座椅只做记录，不显示隐藏数值")
+end
+
+-- 加速到 100 km/h 后进入刹车时刻（判定轮）。
+---@param selection PreDriveSelection
+function OnBrakeTime(selection)
+    if not session or not landing then return end
+    print(string.format("[会话] 刹车时刻 空调=%s 座椅=%.2f（占位记录）",
+        selection.acOn and "开" or "关", selection.seat))
     scene = SCENE_COCKPIT
     phase = BrakeTestDemo.PHASE_LANDING
     pendingOutcome = nil
-    -- 每次进入驾驶舱都从新的一次落点开始；换车沿用同一会话。
+    preDriveView = nil
+    -- 每次进入判定都从新的一次落点开始；换车沿用同一会话。
     if not landing.moving then landing:Start() end
     cockpitView = Cockpit.Create(DemoConfig.landing, {
         lever = DemoConfig.lever,
@@ -166,20 +215,40 @@ function OnPrepConfirm(selection)
         onBackToMenu = function() Defer(GoToMenu) end,
     })
     SetSceneRoot(cockpitView.root)
-    local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
-    local clothing = assert(FlowConfig.character.clothing[selection.clothingIndex], "上衣索引无效")
-    local trousers = assert(FlowConfig.character.trousers[selection.trousersIndex], "裤子索引无效")
-    print(string.format("[会话] 上车 鞋=%s 上衣=%s 裤子=%s",
-        shoe.id, clothing.id, trousers.id))
     RefreshCockpit()
 end
 
 function OnChangeVehicle()
-    if not session or scene ~= SCENE_COCKPIT then return end
+    if not session then return end
+    if scene ~= SCENE_COCKPIT and scene ~= SCENE_DECISION then return end
     if session:ChangeVehicle() then
         print(string.format("[会话] 换车 → 第 %d 台；总次数与历史不重置", session:VehicleIndex()))
-        RefreshCockpit()
+        if scene == SCENE_COCKPIT then
+            RefreshCockpit()
+        else
+            Defer(function() GoToDecision() end)
+        end
     end
+end
+
+-- 测试后的独立选择界面：继续测试 / 发帖 / 换车。
+function GoToDecision()
+    if not session then return end
+    scene = SCENE_DECISION
+    cockpitView = nil
+    local view = Decision.Create(session, {
+        onContinue = function() Defer(OnContinueTest) end,
+        onPost = function() Defer(OnPost) end,
+        onChangeVehicle = OnChangeVehicle,
+        onBackToMenu = function() Defer(GoToMenu) end,
+    })
+    SetSceneRoot(view.root)
+end
+
+-- 继续测试：回到发车前准备，重新走加速与刹车时刻；总次数与历史继续累计。
+function OnContinueTest()
+    if not session then return end
+    GoToPreDrive()
 end
 
 function OnPost()
@@ -250,17 +319,12 @@ function Confirm(source)
             record.force, record.intentForce, stored.breakState))
         phase = BrakeTestDemo.PHASE_LANDING
         landingRecord = nil
+        -- 第三次结束必须发帖；否则进入独立的"继续测试／发帖"选择界面。
         if session:PostingState() == Session.POST_REQUIRED then
-            Defer(function()
-                scene = SCENE_NOTICE
-                SetSceneRoot(BuildNotice("第三次测试已结束：必须发帖",
-                    "总测试次数已用满，按已确认规则必须进入发帖。发帖（D3）尚未实现，"
-                    .. "因此这里只到流程出口。"))
-            end)
+            Defer(function() GoToDecision() end)
             return
         end
-        landing:Start()
-        RefreshCockpit()
+        Defer(function() GoToDecision() end)
     end
 end
 
@@ -327,8 +391,13 @@ function HandleUpdate(eventType, eventData)
         skipNextUpdate = false
         return
     end
-    if scene ~= SCENE_COCKPIT or pendingOutcome then return end
     local dt = eventData:GetFloat("TimeStep")
+    -- 发车前准备：推进加速计时，到达 100 km/h 后自动进入刹车时刻。
+    if scene == SCENE_PREDRIVE and preDriveView then
+        preDriveView:Update(dt)
+        return
+    end
+    if scene ~= SCENE_COCKPIT or pendingOutcome then return end
     -- 只推进当前阶段，另一轮保持锁定。
     if phase == BrakeTestDemo.PHASE_LANDING and landing then
         landing:Update(dt)
@@ -344,6 +413,11 @@ function HandleKeyDown(eventType, eventData)
     local key = eventData:GetInt("Key")
     if key ~= KEY_SPACE and key ~= KEY_RETURN then return end
     if not gate:Press(key, eventData:GetBool("Repeat")) then return end
+    -- 上车过场：空格推进一段，走完自动进入发车前准备。
+    if scene == SCENE_BOARDING then
+        if boardingView and not boardingView:Advance() then Defer(GoToPreDrive) end
+        return
+    end
     if scene ~= SCENE_COCKPIT or pendingOutcome then return end
     Confirm("keyboard")
 end

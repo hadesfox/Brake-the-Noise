@@ -99,21 +99,25 @@ function Tests.Run()
     -- 已确认规则不可被配置改写：总次数必须为 3。
     local badFlow = { version = "x", maxTests = 4,
         outcomePolicy = { missed = "unset", throttle = "unset" },
-        character = FlowConfig.character, weather = FlowConfig.weather }
+        character = FlowConfig.character, weather = FlowConfig.weather,
+        preDrive = FlowConfig.preDrive, acceleration = FlowConfig.acceleration }
     check(not pcall(SessionFlow.Create, badFlow, 1), "总次数不是 3 时被拒绝")
     local badPolicy = { version = "x", maxTests = 3,
         outcomePolicy = { missed = "guess", throttle = "unset" },
-        character = FlowConfig.character, weather = FlowConfig.weather }
+        character = FlowConfig.character, weather = FlowConfig.weather,
+        preDrive = FlowConfig.preDrive, acceleration = FlowConfig.acceleration }
     check(not pcall(SessionFlow.Create, badPolicy, 1), "未知后果策略被拒绝")
     local noWeather = { version = "x", maxTests = 3,
         outcomePolicy = { missed = "unset", throttle = "unset" },
-        character = FlowConfig.character, weather = {} }
+        character = FlowConfig.character, weather = {},
+        preDrive = FlowConfig.preDrive, acceleration = FlowConfig.acceleration }
     check(not pcall(SessionFlow.Create, noWeather, 1), "没有天气时被拒绝")
 
     -- 后果策略已确认时，留空分支之外的两条路径都要能走通。
     local consumeFlow = { version = "x", maxTests = 3,
         outcomePolicy = { missed = "consume", throttle = "consume" },
-        character = FlowConfig.character, weather = FlowConfig.weather }
+        character = FlowConfig.character, weather = FlowConfig.weather,
+        preDrive = FlowConfig.preDrive, acceleration = FlowConfig.acceleration }
     local consumeSession = SessionFlow.Create(consumeFlow, 3)
     check(consumeSession:ResolveOutcome("missed") == SessionFlow.POLICY_CONSUME, "踩空可配置为计次")
     consumeSession:RecordTest({ outcome = "missed", shoeId = "demo-flat",
@@ -121,7 +125,8 @@ function Tests.Run()
     check(consumeSession:TestsUsed() == 1, "踩空计次时占用机会")
     local retryFlow = { version = "x", maxTests = 3,
         outcomePolicy = { missed = "retry", throttle = "retry" },
-        character = FlowConfig.character, weather = FlowConfig.weather }
+        character = FlowConfig.character, weather = FlowConfig.weather,
+        preDrive = FlowConfig.preDrive, acceleration = FlowConfig.acceleration }
     local retrySession = SessionFlow.Create(retryFlow, 3)
     retrySession:RecordTest({ outcome = "missed", shoeId = "demo-flat",
         breakState = SessionFlow.BREAK_NONE })
