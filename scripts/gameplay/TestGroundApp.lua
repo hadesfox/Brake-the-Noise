@@ -16,7 +16,8 @@ function App:Init()
     self.ground=GroundScene.Create(self.scene)
     local prefab=cache:GetResource("XMLFile","model/mpv_seven_seat/Prefabs/OriginalMPV.prefab")
     assert(prefab,"主界面车辆预制体缺失")
-    self.car=self.scene:InstantiateXML(prefab:GetRoot(),Vector3(0,0.015,0),Quaternion.IDENTITY,LOCAL)
+    -- 车头朝镜头，略转12度露出车侧；车手在车头左侧形成双主角构图。
+    self.car=self.scene:InstantiateXML(prefab:GetRoot(),Vector3(0.6,0.015,0.45),Quaternion(0,168,0),LOCAL)
     assert(self.car,"主界面车辆加载失败")
     self.car.name="MenuParkedMPV"
     -- 直接从已交付模型的实际包围盒贴地，不启动载具物理或持续修正位置。
@@ -28,13 +29,14 @@ function App:Init()
         minimumY=math.min(minimumY,drawable.worldBoundingBox.min.y)
         materialCount=materialCount+drawable.numGeometries
     end
-    self.car.position=Vector3(0,0.015+(0.015-minimumY),0)
+    local carPosition=self.car.position
+    self.car.position=Vector3(carPosition.x,carPosition.y+(0.015-minimumY),carPosition.z)
     self.person=self.ground.person
     self.cameraNode=self.scene:CreateChild("MenuCamera",LOCAL)
     self.camera=self.cameraNode:CreateComponent("Camera",LOCAL)
     self.camera.nearClip=0.1
     self.camera.farClip=1800
-    self.camera.fov=43
+    self.camera.fov=34
     self.focused=true
     self.closed=false
     self.pendingAction=""
@@ -42,17 +44,18 @@ function App:Init()
     self.pointerDown={} ---@type table<number,table>
     self.viewportWidth=0.0
     self.viewportHeight=0.0
-    -- 热点规划（车辆局部坐标，+Z车头）：
-    -- 人物[-3, -0.7]   车门 x=-1.0,z=+0.7   车尾 z=-2.6
+    -- 热点规划（车辆局部坐标，+Z车头；整体转向镜头）：
+    -- 人物举拳外沿 x=+0.60,y=2.05；可见车门 x=+1.0,z=+0.7；车头 z=+2.6。
+    -- 车尾已被车身挡住，档案入口改锚定到可见车头，避免隔着车身误选车门。
     -- 三个拾取盒分离；射线先转到各对象局部，取最近命中。
     -- 只做主界面拾取，不创建人物/车身碰撞或进入测试流程。
     self.hotspots={
         {id="person",title="人物 · 占位",node=self.person,anchor=Vector3(0,1.30,0),
-            bounds=BoundingBox(Vector3(-0.44,0,-0.25),Vector3(0.44,1.78,0.25)),offset=Vector2(-175,-24)},
-        {id="start",title="开始测试",node=self.car,anchor=Vector3(-1.02,1.08,0.7),
-            bounds=BoundingBox(Vector3(-1.22,0.52,0.08),Vector3(-0.78,1.80,1.30)),offset=Vector2(-15,-65)},
-        {id="archive",title="测试档案",node=self.car,anchor=Vector3(-0.32,1.05,-2.61),
-            bounds=BoundingBox(Vector3(-0.98,0.45,-2.85),Vector3(0.98,1.88,-2.35)),offset=Vector2(25,32)},
+            bounds=BoundingBox(Vector3(-0.53,0,-0.25),Vector3(0.61,2.06,0.28)),offset=Vector2(-220,40)},
+        {id="start",title="开始测试",node=self.car,anchor=Vector3(1.02,1.08,0.7),
+            bounds=BoundingBox(Vector3(0.78,0.52,0.08),Vector3(1.22,1.80,1.30)),offset=Vector2(-60,220)},
+        {id="archive",title="测试档案",node=self.car,anchor=Vector3(-0.35,1.20,2.60),
+            bounds=BoundingBox(Vector3(-0.75,0.70,2.35),Vector3(0.25,1.50,2.90)),offset=Vector2(200,0)},
     }
     self.ui=GroundUI.Create(self.hotspots,function(action)self.pendingAction=action end,
         function(event,kind)self:Pointer(event,kind)end)
@@ -61,7 +64,7 @@ function App:Init()
     renderer:SetViewport(0,Viewport:new(self.scene,self.camera))
     input.mouseMode=MM_ABSOLUTE
     self:PostUpdate(0)
-    print(string.format("[直道主界面] 静态车辆%d模型/%d材质槽；热点：人物、车门、车尾",#drawables,materialCount))
+    print(string.format("[直道主界面] 静态车辆%d模型/%d材质槽；热点：人物、车门、车头",#drawables,materialCount))
 end
 
 function App:Pick(x,y)
@@ -143,9 +146,15 @@ function App:PostUpdate(dt)
     if width~=self.viewportWidth or height~=self.viewportHeight then
         self.viewportWidth=width
         self.viewportHeight=height
-        -- 固定后侧构图：车、人可见，直道向远方延伸；不开放驾驶或自由相机。
-        self.cameraNode.position=width<height and Vector3(-13,8,-17) or Vector3(-9,4.8,-11)
-        self.cameraNode:LookAt(Vector3(-0.65,0.95,0.6))
+        -- 低机位正面近景：车手与车头并肩亮相，直道只做背景，不开放驾驶或自由相机。
+        -- 窄屏仅沿同一视线后退，按宽高比保持人车完整，不再切换高位俯视。
+        local target=Vector3(-0.35,1.05,-0.8)
+        local viewOffset=Vector3(-0.35,0.27,-7.4)
+        local aspect=width/math.max(height,1)
+        local framingScale=math.max(1,1.35/math.max(aspect,0.1))
+        self.cameraNode.position=target+viewOffset*framingScale
+        self.cameraNode:LookAt(target)
+        print(string.format("[直道主界面] 正面近景 %.2f:1，机位缩放%.2f，FOV %.0f",aspect,framingScale,self.camera.fov))
     end
     self.ui:UpdateAnchors(self.camera)
 end

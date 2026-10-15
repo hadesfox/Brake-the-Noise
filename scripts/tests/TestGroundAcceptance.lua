@@ -57,6 +57,32 @@ function HandleMenuAcceptance(eventType,eventData)
     if frame==30 then
         Check("长直道场景",app.ground.roadLength>=1000 and app.scene:GetChild("LoopRoad",true)==nil)
         Check("无驾驶物理组件",#app.scene:GetComponents("PhysicsWorld",true)==0 and #app.scene:GetComponents("RaycastVehicle",true)==0)
+        local front=app.car:LocalToWorld(Vector3(0,1,2.6))
+        local rear=app.car:LocalToWorld(Vector3(0,1,-2.6))
+        local cameraPosition=app.cameraNode.worldPosition
+        Check("镜头位于车头正面",(front-cameraPosition):Length()<(rear-cameraPosition):Length())
+        Check("低机位近景",app.camera.fov<=36 and app.cameraNode.rotation:PitchAngle()<5)
+        local fist=app.person:GetChild("VictoryFist")
+        local head=app.person:GetChild("HeadPlaceholder")
+        Check("车手举拳胜利姿态",fist~=nil and head~=nil and fist.worldPosition.y>head.worldPosition.y+0.25)
+        local personModels=app.person:GetComponents("StaticModel",true)
+        local top=1.0
+        local bottom=0.0
+        for _,drawable in ipairs(personModels) do
+            local bounds=drawable.worldBoundingBox
+            for _,x in ipairs({bounds.min.x,bounds.max.x}) do
+                for _,y in ipairs({bounds.min.y,bounds.max.y}) do
+                    for _,z in ipairs({bounds.min.z,bounds.max.z}) do
+                        local screen=app.camera:WorldToScreenPoint(Vector3(x,y,z))
+                        top=math.min(top,screen.y)
+                        bottom=math.max(bottom,screen.y)
+                    end
+                end
+            end
+        end
+        local w,h=UI.GetViewportSize()
+        Check("车手完整入镜",top>0.05 and bottom<0.95)
+        Check("横屏主体足够近",w<h or bottom-top>0.45)
         UI.Layout()
         CheckHotspots()
     elseif frame==120 then

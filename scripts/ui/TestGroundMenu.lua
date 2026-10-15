@@ -33,7 +33,7 @@ function Menu:Init(hotspots,onAction,onPointer)
         UI.Label{text="舆论刹车",fontSize=26,fontColor={38,53,49,255}},
         UI.Label{text="零百加速直道 · 主界面构图",fontSize=11,fontColor={58,73,67,255}},
     }}
-    self.hint=UI.Label{text="点击人物、车门或车尾 · 当前仅演示主界面入口",fontSize=11,
+    self.hint=UI.Label{text="点击人物、车门或车头 · 当前仅演示主界面入口",fontSize=11,
         position="absolute",bottom=18,left=24,fontColor={235,234,218,255}}
     self.sceneInput=UI.Panel{width="100%",height="100%",position="absolute",left=0,top=0,
         onPointerDown=function(event)onPointer(event,"down")end,
@@ -75,8 +75,20 @@ function Menu:UpdateAnchors(camera)
     for _,hotspot in ipairs(self.hotspots) do
         local screen=camera:WorldToScreenPoint(hotspot.node:LocalToWorld(hotspot.anchor))
         local x,y=screen.x*width,screen.y*height
-        local left=math.max(safeX+12,math.min(safeX+safeWidth-140,x+hotspot.offset.x))
-        local top=math.max(safeY+96,math.min(safeY+safeHeight-82,y+hotspot.offset.y))
+        local offset=hotspot.offset
+        if small then
+            if hotspot.id=="person" then offset=Vector2(-190,35)
+            elseif hotspot.id=="start" then offset=Vector2(-60,165)
+            elseif hotspot.id=="archive" then offset=Vector2(150,0) end
+        end
+        -- 窄屏标签统一排在人车下方，避免覆盖举拳、脸部和车头。
+        if width<height then
+            if hotspot.id=="person" then offset=Vector2(-64,200)
+            elseif hotspot.id=="start" then offset=Vector2(-128,230)
+            elseif hotspot.id=="archive" then offset=Vector2(12,230) end
+        end
+        local left=math.max(safeX+12,math.min(safeX+safeWidth-140,x+offset.x))
+        local top=math.max(safeY+96,math.min(safeY+safeHeight-82,y+offset.y))
         for _,rect in ipairs(used) do
             if math.abs(left-rect.x)<136 and math.abs(top-rect.y)<48 then top=math.min(top+52,safeY+safeHeight-70) end
         end
@@ -85,7 +97,7 @@ function Menu:UpdateAnchors(camera)
         self.dots[hotspot.id]:SetStyle({left=x-3.5,top=y-3.5})
     end
     self.hint:SetVisible(self.selected=="")
-    self.hint:SetText(width<600 and "点击人物或车辆部位" or "点击人物、车门或车尾 · 当前仅演示主界面入口")
+    self.hint:SetText(width<600 and "点击人物或车辆部位" or "点击人物、车门或车头 · 当前仅演示主界面入口")
 end
 
 function Menu:SetHover(id)

@@ -1,0 +1,92 @@
+{
+    "version": 2,
+    "script": "tests/TestGroundAcceptance.lua",
+    "result": "FAIL",
+    "duration_ms": 59561,
+    "frames_completed": 160,
+    "phases": {
+        "load": {
+            "result": "PASS",
+            "errors": []
+        },
+        "init": {
+            "result": "PASS",
+            "errors": []
+        },
+        "run": {
+            "result": "FAIL",
+            "errors": [
+                {
+                    "category": "lua",
+                    "message": "[2026-10-15 17_40_18_725][33]ERROR[主界面验收失败] 场景射线拾取 archive",
+                    "frame": 30
+                },
+                {
+                    "category": "lua",
+                    "message": "[2026-10-15 17_40_18_725][33]ERROR[主界面验收失败] 人物或部位点击反馈 archive",
+                    "frame": 30
+                }
+            ]
+        },
+        "scene": {
+            "result": "PASS",
+            "errors": [],
+            "node_count": 0,
+            "component_count": 0,
+            "scene_exists": false
+        }
+    },
+    "state_snapshots": [
+        {
+            "frame": 1,
+            "phase": "init",
+            "nodes": 21,
+            "components": 21,
+            "hash": 3708914773,
+            "frame_time_ms": 324.44500732421877
+        },
+        {
+            "frame": 10,
+            "phase": "run",
+            "nodes": 21,
+            "components": 21,
+            "hash": 3708914773,
+            "frame_time_ms": 449.2120056152344
+        },
+        {
+            "frame": 80,
+            "phase": "run",
+            "nodes": 21,
+            "components": 21,
+            "hash": 3708914773,
+            "frame_time_ms": 491.6679992675781
+        },
+        {
+            "frame": 160,
+            "phase": "run",
+            "nodes": 0,
+            "components": 0,
+            "hash": 0,
+            "frame_time_ms": 17.006000518798829
+        }
+    ],
+    "scene_stalled": false,
+    "max_frame_time_ms": 752.2509765625,
+    "update_defined": false,
+    "component_census": {},
+    "test_result": "NOT_RUN",
+    "test_assertions": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0
+    },
+    "test_issues": [],
+    "missing_resources": [],
+    "missing_engine_resources": [],
+    "summary": {
+        "lua_errors": 2,
+        "resource_errors": 0,
+        "engine_errors": 0,
+        "total_errors": 2
+    }
+}

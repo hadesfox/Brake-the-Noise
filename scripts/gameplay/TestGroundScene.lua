@@ -65,15 +65,32 @@ function Ground:Init(scene)
     self:Box("StartLine",Vector3(0,0.024,4.5),Vector3(11.2,0.012,0.20),self.line)
     self:Lighting()
     self.person=self.scene:CreateChild("PersonPlaceholder",LOCAL)
-    self.person.position=Vector3(-3.0,0.015,-0.7)
-    -- 只用灰色基础几何体表示1.75m站立体量，不确定发型、服装、性别或角色风格。
-    self:Mesh("HeadPlaceholder",self.sphere,Vector3(0,1.56,0),Vector3(0.34,0.38,0.34),self.placeholderColor,self.person)
-    self:Mesh("TorsoPlaceholder",self.box,Vector3(0,1.15,0),Vector3(0.46,0.58,0.28),self.placeholderColor,self.person)
+    self.person.position=Vector3(-1.65,0.015,-1.95)
+    self.person.rotation=Quaternion(0,174,0)
+    -- 仍用灰色几何占位，不确定角色外形；正面亮相、双脚分开、单臂举拳、另一手叉腰。
+    self:Mesh("HeadPlaceholder",self.sphere,Vector3(0,1.56,0.015),Vector3(0.34,0.38,0.34),self.placeholderColor,self.person)
+    local torso=self:Mesh("TorsoPlaceholder",self.box,Vector3(0,1.15,0),Vector3(0.46,0.58,0.28),self.placeholderColor,self.person)
+    torso.rotation=Quaternion(0,0,-4)
     for _,side in ipairs({-1,1}) do
-        self:Mesh("ArmPlaceholder",self.box,Vector3(side*0.32,1.08,0),Vector3(0.14,0.62,0.16),self.placeholderColor,self.person)
-        self:Mesh("LegPlaceholder",self.box,Vector3(side*0.13,0.43,0),Vector3(0.18,0.84,0.20),self.placeholderColor,self.person)
+        self:PoseLimb("ThighPlaceholder",Vector3(side*0.13,0.87,0),Vector3(side*0.19,0.47,0),0.18,0.20)
+        self:PoseLimb("ShinPlaceholder",Vector3(side*0.19,0.47,0),Vector3(side*0.24,0.10,0.03),0.17,0.19)
+        self:Mesh("FootPlaceholder",self.box,Vector3(side*0.24,0.055,0.08),Vector3(0.21,0.08,0.32),self.placeholderColor,self.person)
     end
-    print("[直道主界面] 长直道占位1600m，灰色人物占位1.75m；不加载环道和驾驶玩法")
+    self:PoseLimb("VictoryUpperArm",Vector3(0.25,1.38,0),Vector3(0.47,1.66,0.01),0.14,0.16)
+    self:PoseLimb("VictoryForearm",Vector3(0.47,1.66,0.01),Vector3(0.51,1.93,0.045),0.13,0.15)
+    self:Mesh("VictoryFist",self.box,Vector3(0.51,1.96,0.045),Vector3(0.17,0.18,0.18),self.placeholderColor,self.person)
+    self:PoseLimb("HipUpperArm",Vector3(-0.25,1.38,0),Vector3(-0.44,1.12,-0.04),0.14,0.16)
+    self:PoseLimb("HipForearm",Vector3(-0.44,1.12,-0.04),Vector3(-0.23,0.99,0.17),0.13,0.15)
+    self:Mesh("HipHand",self.box,Vector3(-0.23,0.99,0.17),Vector3(0.14,0.16,0.15),self.placeholderColor,self.person)
+    print("[直道主界面] 长直道占位1600m，灰色车手举拳亮相；不加载环道和驾驶玩法")
+end
+
+function Ground:PoseLimb(name,startPoint,endPoint,width,depth)
+    local direction=endPoint-startPoint
+    local node=self:Mesh(name,self.box,(startPoint+endPoint)*0.5,Vector3(width,direction:Length(),depth),
+        self.placeholderColor,self.person)
+    node.rotation=Quaternion(Vector3.UP,direction:Normalized())
+    return node
 end
 
 function Ground:Lighting()
