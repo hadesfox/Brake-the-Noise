@@ -1,0 +1,43 @@
+{
+  "asset_name": "OriginalMPV_SevenSeat",
+  "units": "meter",
+  "up_axis": "Y",
+  "forward_axis": "+Z",
+  "driving_side": "left",
+  "seat_layout": "2+2+3",
+  "triangles": 20728,
+  "material_slots": 61,
+  "functional_models": 16,
+  "runtime_prefab": "model/mpv_seven_seat/Prefabs/OriginalMPV.prefab",
+  "wheel_radius_m": 0.425,
+  "wheel_axle_axis": "X",
+  "steering_rotation_axis": "Z",
+  "legrest_rotation_axis": "X",
+  "legrest_default_pose": "folded",
+  "second_row_minimum_aisle_m": 0.326,
+  "side_windows": "open",
+  "windshield": "transparent",
+  "driving_logic": false,
+  "physics_collision": false,
+  "animations": false,
+  "validation": {
+    "relative_resource_refs": true,
+    "reference_checks": 154,
+    "imported_geometry_matches_preview": true,
+    "engine_instantiation": false,
+    "engine_visual_test": false,
+    "seat_or_legrest_motion_test": false,
+    "source_game_unchanged": true,
+    "source_game_sha256": "88ba91872dea1ee41ec06ddf47adba77652f3c194a0330c98983929cf645844e"
+  },
+  "package_layout": {
+    "runtime": "model/mpv_seven_seat",
+    "editable_source": "Source",
+    "specification": "asset-spec.json"
+  },
+  "known_limitations": [
+    "保留已认可粗模外壳，轮拱和部分接缝仍有粗模痕迹",
+    "当前校验仅针对静态姿态，不保证座椅调节及腿托展开时的净空",
+    "未完成引擎实例化、驾驶逻辑或移动端性能验收"
+  ]
+}

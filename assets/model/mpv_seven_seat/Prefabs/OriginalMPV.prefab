@@ -1,0 +1,231 @@
+<?xml version='1.0' encoding='utf-8'?>
+<node>
+	<attribute name="Name" value="OriginalMPV" />
+	<attribute name="Position" value="0 0 0" />
+	<attribute name="Rotation" value="1 0 0 0" />
+	<attribute name="Scale" value="1 1 1" />
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="Body" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="0 0 0" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/Body.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/Body_00_WarmIvory.xml;model/mpv_seven_seat/Materials/Body_01_SlateBlue.xml;model/mpv_seven_seat/Materials/Body_02_MatteAlloy.xml;model/mpv_seven_seat/Materials/Body_03_HeadlampCream.xml;model/mpv_seven_seat/Materials/Body_04_TaillampRed.xml;model/mpv_seven_seat/Materials/Body_05_IndicatorAmber.xml;model/mpv_seven_seat/Materials/Body_06_CharcoalTrim.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="Roof" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="0 0 0" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/Roof.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/Roof_00_WarmIvory.xml;model/mpv_seven_seat/Materials/Roof_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/Roof_02_HeadlampCream.xml;model/mpv_seven_seat/Materials/Roof_03_TaillampRed.xml;model/mpv_seven_seat/Materials/Roof_04_CharcoalTrim.xml;model/mpv_seven_seat/Materials/Roof_05_MatteAlloy.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="Glass" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="0 0 0" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/Glass.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/Glass_00_ClearSmokeGlass.xml" />
+			<attribute name="Cast Shadows" value="false" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="Interior" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="0 0 0" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/Interior.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/Interior_00_MatteAlloy.xml;model/mpv_seven_seat/Materials/Interior_01_CharcoalTrim.xml;model/mpv_seven_seat/Materials/Interior_02_SandUpholstery.xml;model/mpv_seven_seat/Materials/Interior_03_WalnutDashboard.xml;model/mpv_seven_seat/Materials/Interior_04_InstrumentTeal.xml;model/mpv_seven_seat/Materials/Interior_05_ScreenBlack.xml;model/mpv_seven_seat/Materials/Interior_06_CabinFloor.xml;model/mpv_seven_seat/Materials/Interior_07_WarmIvory.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="SteeringWheel" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="-0.52 1.37 0.68" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/SteeringWheel.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/SteeringWheel_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/SteeringWheel_01_MatteAlloy.xml;model/mpv_seven_seat/Materials/SteeringWheel_02_WalnutDashboard.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+		</node>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="FrontSeatLeft" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="-0.52 0 0.23" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/FrontSeatLeft.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/FrontSeatLeft_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/FrontSeatLeft_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/FrontSeatLeft_02_SeatInsert.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+		</node>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="CaptainSeatLeft" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="-0.52 0 -0.9" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/CaptainSeatLeft.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/CaptainSeatLeft_00_WalnutDashboard.xml;model/mpv_seven_seat/Materials/CaptainSeatLeft_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/CaptainSeatLeft_02_SeatInsert.xml;model/mpv_seven_seat/Materials/CaptainSeatLeft_03_CharcoalTrim.xml;model/mpv_seven_seat/Materials/CaptainSeatLeft_04_MatteAlloy.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+			<node>
+				<attribute name="Is Enabled" value="true" />
+				<attribute name="Name" value="LegRestLeft" />
+				<attribute name="Tags" value="" />
+				<attribute name="Position" value="0 0.94 0.35" />
+				<attribute name="Rotation" value="1 0 0 0" />
+				<attribute name="Scale" value="1 1 1" />
+				<attribute name="Variables" value="" />
+				<component type="StaticModel">
+					<attribute name="Model" value="Model;model/mpv_seven_seat/Models/LegRestLeft.mdl" />
+					<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/LegRestLeft_00_SandUpholstery.xml;model/mpv_seven_seat/Materials/LegRestLeft_01_SeatInsert.xml" />
+					<attribute name="Cast Shadows" value="true" />
+				</component>
+			</node>
+		</node>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="FrontSeatRight" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="0.52 0 0.23" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/FrontSeatRight.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/FrontSeatRight_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/FrontSeatRight_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/FrontSeatRight_02_SeatInsert.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+		</node>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="CaptainSeatRight" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="0.52 0 -0.9" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/CaptainSeatRight.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/CaptainSeatRight_00_WalnutDashboard.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_02_SeatInsert.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_03_CharcoalTrim.xml;model/mpv_seven_seat/Materials/CaptainSeatRight_04_MatteAlloy.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+			<node>
+				<attribute name="Is Enabled" value="true" />
+				<attribute name="Name" value="LegRestRight" />
+				<attribute name="Tags" value="" />
+				<attribute name="Position" value="0 0.94 0.35" />
+				<attribute name="Rotation" value="1 0 0 0" />
+				<attribute name="Scale" value="1 1 1" />
+				<attribute name="Variables" value="" />
+				<component type="StaticModel">
+					<attribute name="Model" value="Model;model/mpv_seven_seat/Models/LegRestRight.mdl" />
+					<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/LegRestRight_00_SandUpholstery.xml;model/mpv_seven_seat/Materials/LegRestRight_01_SeatInsert.xml" />
+					<attribute name="Cast Shadows" value="true" />
+				</component>
+			</node>
+		</node>
+		<node>
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="RearBench" />
+			<attribute name="Tags" value="" />
+			<attribute name="Position" value="0 0 -2" />
+			<attribute name="Rotation" value="1 0 0 0" />
+			<attribute name="Scale" value="1 1 1" />
+			<attribute name="Variables" value="" />
+			<component type="StaticModel">
+				<attribute name="Model" value="Model;model/mpv_seven_seat/Models/RearBench.mdl" />
+				<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/RearBench_00_WalnutDashboard.xml;model/mpv_seven_seat/Materials/RearBench_01_SandUpholstery.xml;model/mpv_seven_seat/Materials/RearBench_02_SeatInsert.xml;model/mpv_seven_seat/Materials/RearBench_03_CharcoalTrim.xml" />
+				<attribute name="Cast Shadows" value="true" />
+			</component>
+		</node>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="WheelFrontLeft" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="-1.04 0.44 1.64" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/WheelFrontLeft.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/WheelFrontLeft_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/WheelFrontLeft_01_TireRubber.xml;model/mpv_seven_seat/Materials/WheelFrontLeft_02_MatteAlloy.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="WheelRearLeft" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="-1.04 0.44 -1.76" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/WheelRearLeft.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/WheelRearLeft_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/WheelRearLeft_01_TireRubber.xml;model/mpv_seven_seat/Materials/WheelRearLeft_02_MatteAlloy.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="WheelFrontRight" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="1.04 0.44 1.64" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/WheelFrontRight.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/WheelFrontRight_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/WheelFrontRight_01_TireRubber.xml;model/mpv_seven_seat/Materials/WheelFrontRight_02_MatteAlloy.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+	<node>
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="WheelRearRight" />
+		<attribute name="Tags" value="" />
+		<attribute name="Position" value="1.04 0.44 -1.76" />
+		<attribute name="Rotation" value="1 0 0 0" />
+		<attribute name="Scale" value="1 1 1" />
+		<attribute name="Variables" value="" />
+		<component type="StaticModel">
+			<attribute name="Model" value="Model;model/mpv_seven_seat/Models/WheelRearRight.mdl" />
+			<attribute name="Material" value="Material;model/mpv_seven_seat/Materials/WheelRearRight_00_CharcoalTrim.xml;model/mpv_seven_seat/Materials/WheelRearRight_01_TireRubber.xml;model/mpv_seven_seat/Materials/WheelRearRight_02_MatteAlloy.xml" />
+			<attribute name="Cast Shadows" value="true" />
+		</component>
+	</node>
+</node>

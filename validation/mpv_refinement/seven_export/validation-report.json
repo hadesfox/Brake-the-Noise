@@ -1,0 +1,193 @@
+{
+  "triangles": 20728,
+  "mdl_models": 16,
+  "material_slots": 61,
+  "reference_checks": 154,
+  "hierarchy": [
+    {
+      "name": "OriginalMPV",
+      "parent": null,
+      "position": "0 0 0"
+    },
+    {
+      "name": "Body",
+      "parent": "OriginalMPV",
+      "position": "0 0 0"
+    },
+    {
+      "name": "Roof",
+      "parent": "OriginalMPV",
+      "position": "0 0 0"
+    },
+    {
+      "name": "Glass",
+      "parent": "OriginalMPV",
+      "position": "0 0 0"
+    },
+    {
+      "name": "Interior",
+      "parent": "OriginalMPV",
+      "position": "0 0 0"
+    },
+    {
+      "name": "SteeringWheel",
+      "parent": "Interior",
+      "position": "-0.52 1.37 0.68"
+    },
+    {
+      "name": "FrontSeatLeft",
+      "parent": "Interior",
+      "position": "-0.52 0 0.23"
+    },
+    {
+      "name": "CaptainSeatLeft",
+      "parent": "Interior",
+      "position": "-0.52 0 -0.9"
+    },
+    {
+      "name": "LegRestLeft",
+      "parent": "CaptainSeatLeft",
+      "position": "0 0.94 0.35"
+    },
+    {
+      "name": "FrontSeatRight",
+      "parent": "Interior",
+      "position": "0.52 0 0.23"
+    },
+    {
+      "name": "CaptainSeatRight",
+      "parent": "Interior",
+      "position": "0.52 0 -0.9"
+    },
+    {
+      "name": "LegRestRight",
+      "parent": "CaptainSeatRight",
+      "position": "0 0.94 0.35"
+    },
+    {
+      "name": "RearBench",
+      "parent": "Interior",
+      "position": "0 0 -2"
+    },
+    {
+      "name": "WheelFrontLeft",
+      "parent": "OriginalMPV",
+      "position": "-1.04 0.44 1.64"
+    },
+    {
+      "name": "WheelRearLeft",
+      "parent": "OriginalMPV",
+      "position": "-1.04 0.44 -1.76"
+    },
+    {
+      "name": "WheelFrontRight",
+      "parent": "OriginalMPV",
+      "position": "1.04 0.44 1.64"
+    },
+    {
+      "name": "WheelRearRight",
+      "parent": "OriginalMPV",
+      "position": "1.04 0.44 -1.76"
+    }
+  ],
+  "models": [
+    {
+      "part": "Body",
+      "triangles": 4102,
+      "geometry_count": 7,
+      "model_info": "Model: Body.mdl\n\nBounding Box:\n  Min: (-1.275, 0.186841, -2.69473)\n  Max: (1.275, 1.98709, 2.69473)\n  Size: (2.55, 1.80024, 5.38945)\n\nGeometries: 7\n  Geometry 0 (1 LOD levels):\n    LOD0: 2180 verts, 959 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 4424 verts, 2519 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 564 verts, 224 tris, lodDist=0\n  Geometry 4 (1 LOD levels):\n    LOD0: 288 verts, 112 tris, lodDist=0\n  Geometry 5 (1 LOD levels):\n    LOD0: 155 verts, 56 tris, lodDist=0\n  Geometry 6 (1 LOD levels):\n    LOD0: 288 verts, 144 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "CaptainSeatLeft",
+      "triangles": 748,
+      "geometry_count": 5,
+      "model_info": "Model: CaptainSeatLeft.mdl\n\nBounding Box:\n  Min: (-0.425, 0.642, -0.38)\n  Max: (0.425, 1.905, 0.408046)\n  Size: (0.85, 1.263, 0.788046)\n\nGeometries: 5\n  Geometry 0 (1 LOD levels):\n    LOD0: 496 verts, 220 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 672 verts, 308 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 104 verts, 44 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 4 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "CaptainSeatRight",
+      "triangles": 748,
+      "geometry_count": 5,
+      "model_info": "Model: CaptainSeatRight.mdl\n\nBounding Box:\n  Min: (-0.425, 0.642, -0.38)\n  Max: (0.425, 1.905, 0.408046)\n  Size: (0.85, 1.263, 0.788046)\n\nGeometries: 5\n  Geometry 0 (1 LOD levels):\n    LOD0: 496 verts, 220 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 672 verts, 308 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 104 verts, 44 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 4 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "FrontSeatLeft",
+      "triangles": 352,
+      "geometry_count": 3,
+      "model_info": "Model: FrontSeatLeft.mdl\n\nBounding Box:\n  Min: (-0.32, 0.67, -0.315)\n  Max: (0.3225, 1.87, 0.360813)\n  Size: (0.6425, 1.2, 0.675813)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 480 verts, 220 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "FrontSeatRight",
+      "triangles": 352,
+      "geometry_count": 3,
+      "model_info": "Model: FrontSeatRight.mdl\n\nBounding Box:\n  Min: (-0.3225, 0.67, -0.315)\n  Max: (0.32, 1.87, 0.360813)\n  Size: (0.6425, 1.2, 0.675813)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 480 verts, 220 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "Glass",
+      "triangles": 4,
+      "geometry_count": 1,
+      "model_info": "Model: Glass.mdl\n\nBounding Box:\n  Min: (-0.9, 1.41, -1.46)\n  Max: (0.9, 1.93, 2.57)\n  Size: (1.8, 0.52, 4.03)\n\nGeometries: 1\n  Geometry 0 (1 LOD levels):\n    LOD0: 8 verts, 4 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "Interior",
+      "triangles": 4356,
+      "geometry_count": 8,
+      "model_info": "Model: Interior.mdl\n\nBounding Box:\n  Min: (-0.9785, 0.5525, -2.02)\n  Max: (0.9785, 1.935, 2.44)\n  Size: (1.957, 1.3825, 4.46)\n\nGeometries: 8\n  Geometry 0 (1 LOD levels):\n    LOD0: 2474 verts, 1268 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 2784 verts, 1356 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 1920 verts, 880 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 384 verts, 176 tris, lodDist=0\n  Geometry 4 (1 LOD levels):\n    LOD0: 704 verts, 308 tris, lodDist=0\n  Geometry 5 (1 LOD levels):\n    LOD0: 388 verts, 236 tris, lodDist=0\n  Geometry 6 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n  Geometry 7 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "LegRestLeft",
+      "triangles": 88,
+      "geometry_count": 2,
+      "model_info": "Model: LegRestLeft.mdl\n\nBounding Box:\n  Min: (-0.245, -0.32, -0.084)\n  Max: (0.245, 0.02, 0.0025)\n  Size: (0.49, 0.34, 0.0865)\n\nGeometries: 2\n  Geometry 0 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "LegRestRight",
+      "triangles": 88,
+      "geometry_count": 2,
+      "model_info": "Model: LegRestRight.mdl\n\nBounding Box:\n  Min: (-0.245, -0.32, -0.084)\n  Max: (0.245, 0.02, 0.0025)\n  Size: (0.49, 0.34, 0.0865)\n\nGeometries: 2\n  Geometry 0 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "RearBench",
+      "triangles": 616,
+      "geometry_count": 4,
+      "model_info": "Model: RearBench.mdl\n\nBounding Box:\n  Min: (-0.885, 0.69, -0.325)\n  Max: (0.885, 1.87, 0.377068)\n  Size: (1.77, 1.18, 0.702068)\n\nGeometries: 4\n  Geometry 0 (1 LOD levels):\n    LOD0: 304 verts, 132 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 480 verts, 220 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 288 verts, 132 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 288 verts, 132 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "Roof",
+      "triangles": 934,
+      "geometry_count": 6,
+      "model_info": "Model: Roof.mdl\n\nBounding Box:\n  Min: (-0.85957, 1.8575, -0.82793)\n  Max: (0.85957, 2.09883, 2.57871)\n  Size: (1.71914, 0.241328, 3.40664)\n\nGeometries: 6\n  Geometry 0 (1 LOD levels):\n    LOD0: 457 verts, 186 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 3 (1 LOD levels):\n    LOD0: 96 verts, 44 tris, lodDist=0\n  Geometry 4 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 5 (1 LOD levels):\n    LOD0: 960 verts, 440 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "SteeringWheel",
+      "triangles": 372,
+      "geometry_count": 3,
+      "model_info": "Model: SteeringWheel.mdl\n\nBounding Box:\n  Min: (-0.195, -0.195, -0.0275)\n  Max: (0.195, 0.195, 0.0275)\n  Size: (0.39, 0.39, 0.055)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 384 verts, 236 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 192 verts, 88 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 74 verts, 48 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "WheelFrontLeft",
+      "triangles": 1992,
+      "geometry_count": 3,
+      "model_info": "Model: WheelFrontLeft.mdl\n\nBounding Box:\n  Min: (-0.17, -0.429, -0.429)\n  Max: (0.148, 0.429, 0.429)\n  Size: (0.318, 0.858, 0.858)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 2148 verts, 1024 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 720 verts, 480 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 914 verts, 488 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "WheelFrontRight",
+      "triangles": 1992,
+      "geometry_count": 3,
+      "model_info": "Model: WheelFrontRight.mdl\n\nBounding Box:\n  Min: (-0.148, -0.429, -0.429)\n  Max: (0.17, 0.429, 0.429)\n  Size: (0.318, 0.858, 0.858)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 2148 verts, 1024 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 720 verts, 480 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 914 verts, 488 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "WheelRearLeft",
+      "triangles": 1992,
+      "geometry_count": 3,
+      "model_info": "Model: WheelRearLeft.mdl\n\nBounding Box:\n  Min: (-0.17, -0.429, -0.429)\n  Max: (0.148, 0.429, 0.429)\n  Size: (0.318, 0.858, 0.858)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 2148 verts, 1024 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 720 verts, 480 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 914 verts, 488 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    },
+    {
+      "part": "WheelRearRight",
+      "triangles": 1992,
+      "geometry_count": 3,
+      "model_info": "Model: WheelRearRight.mdl\n\nBounding Box:\n  Min: (-0.148, -0.429, -0.429)\n  Max: (0.17, 0.429, 0.429)\n  Size: (0.318, 0.858, 0.858)\n\nGeometries: 3\n  Geometry 0 (1 LOD levels):\n    LOD0: 2148 verts, 1024 tris, lodDist=0\n  Geometry 1 (1 LOD levels):\n    LOD0: 720 verts, 480 tris, lodDist=0\n  Geometry 2 (1 LOD levels):\n    LOD0: 914 verts, 488 tris, lodDist=0\n\nVertex Attributes: Position Normal\n\nSmoothed Normals: none\n\nSkeleton: 0 bones\n"
+    }
+  ],
+  "source_game_hash": "88ba91872dea1ee41ec06ddf47adba77652f3c194a0330c98983929cf645844e",
+  "engine_visual_test": false
+}

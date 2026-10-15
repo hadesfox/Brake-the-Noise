@@ -1,0 +1,9 @@
+{
+  "mdl_models": 16,
+  "triangles": 20728,
+  "positions_match": true,
+  "normals_match": true,
+  "winding_match": true,
+  "forward_axis": "+Z",
+  "steering_side": "left"
+}
