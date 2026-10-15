@@ -1,0 +1,10 @@
+[2026-10-15 16_41_01_155][0] INFO: DownloadManager initialized
+[2026-10-15 16_41_01_157][0] INFO: a couple of Subsystems registered finish.
+[2026-10-15 16_41_01_157][0] INFO: Engine construct finish.
+[2026-10-15 16_41_01_178][0] INFO: Opened log file /home/Maker/logs/game/urhox_runtime-2026-10-15 16_41_01_169.log
+[2026-10-15 16_41_01_178][0] INFO: =======Git Info=======
+[2026-10-15 16_41_01_178][0] INFO: UrhoX: fix/runtime-tool-mode-local-manifest, 91bee56c8; BuildTime: 2026-09-24_13_44_02
+[2026-10-15 16_41_01_178][0] INFO: Engine-res tag: maker_validate_linux.0923
+[2026-10-15 16_41_01_178][0] INFO: Binary version: 1032018
+[2026-10-15 16_41_01_178][0] INFO: ======================
+[2026-10-15 16_41_01_181][0] INFO: DownloadManager: all tasks cancelled

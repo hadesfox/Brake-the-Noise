@@ -1,0 +1,88 @@
+{
+  "radius_error_m": 0.27304706416315483,
+  "result": "PASS",
+  "menu_distance_m": 133.8818532694131,
+  "checks": [
+    {
+      "name": "UI可交互区域在屏幕内",
+      "detail": "menu 1280x720基准像素",
+      "passed": true
+    },
+    {
+      "name": "主界面真实运动",
+      "detail": "里程133.9m 位移48.2m",
+      "passed": true
+    },
+    {
+      "name": "自动巡航保持环道",
+      "detail": "半径最大误差0.273m",
+      "passed": true
+    },
+    {
+      "name": "开始试驾切换",
+      "detail": "按钮回调进入同一车辆",
+      "passed": true
+    },
+    {
+      "name": "UI可交互区域在屏幕内",
+      "detail": "drive 1280x720基准像素",
+      "passed": true
+    },
+    {
+      "name": "试驾油门有效",
+      "detail": "Vector3(24.0001, -0.080496, 5.36875)",
+      "passed": true
+    },
+    {
+      "name": "屏幕刹车有效",
+      "detail": "Vector3(0.000129257, 0.0982338, -0.00705946)",
+      "passed": true
+    },
+    {
+      "name": "左转方向有效",
+      "detail": "yaw=-33.71",
+      "passed": true
+    },
+    {
+      "name": "右转方向有效",
+      "detail": "yaw=33.88",
+      "passed": true
+    },
+    {
+      "name": "倒车有效",
+      "detail": "Vector3(24.0026, -0.152478, -3.6367)",
+      "passed": true
+    },
+    {
+      "name": "悬挂坡实体接触",
+      "detail": "轮射线命中高于平地的斜坡",
+      "passed": true
+    },
+    {
+      "name": "场地防撞墙实体阻挡",
+      "detail": "Vector3(-9.9648e-06, -0.0808667, 10.9729)",
+      "passed": true
+    },
+    {
+      "name": "返回实时主界面",
+      "detail": "",
+      "passed": true
+    },
+    {
+      "name": "全景模式仍运行",
+      "detail": "",
+      "passed": true
+    },
+    {
+      "name": "全景车辆继续运动",
+      "detail": "",
+      "passed": true
+    },
+    {
+      "name": "失焦暂停物理",
+      "detail": "",
+      "passed": true
+    }
+  ],
+  "menu_max_speed_ms": 3.4770147800445557
+}

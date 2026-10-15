@@ -4,7 +4,7 @@
   "author": {
     "id": "1694489473"
   },
-  "entry": "tests/RunVehiclePhysics.lua",
+  "entry": "TestGround.lua",
   "version": "1.0.0",
   "taptap_publish": {
     "title": "舆论刹车",

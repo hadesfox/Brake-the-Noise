@@ -1,0 +1,92 @@
+{
+    "version": 2,
+    "script": "tests/TestGroundAcceptance.lua",
+    "result": "PASS",
+    "duration_ms": 72394,
+    "frames_completed": 4100,
+    "phases": {
+        "load": {
+            "result": "PASS",
+            "errors": []
+        },
+        "init": {
+            "result": "PASS",
+            "errors": []
+        },
+        "run": {
+            "result": "PASS",
+            "errors": []
+        },
+        "scene": {
+            "result": "PASS",
+            "errors": [],
+            "node_count": 480,
+            "component_count": 377,
+            "scene_exists": true
+        }
+    },
+    "state_snapshots": [
+        {
+            "frame": 1,
+            "phase": "init",
+            "nodes": 38,
+            "components": 40,
+            "hash": 542086993,
+            "frame_time_ms": 421.9259948730469
+        },
+        {
+            "frame": 10,
+            "phase": "run",
+            "nodes": 38,
+            "components": 40,
+            "hash": 542086993,
+            "frame_time_ms": 17.67300033569336
+        },
+        {
+            "frame": 2050,
+            "phase": "run",
+            "nodes": 38,
+            "components": 40,
+            "hash": 542086993,
+            "frame_time_ms": 16.6200008392334
+        },
+        {
+            "frame": 4100,
+            "phase": "run",
+            "nodes": 38,
+            "components": 40,
+            "hash": 542086993,
+            "frame_time_ms": 16.618999481201173
+        }
+    ],
+    "scene_stalled": true,
+    "max_frame_time_ms": 77.78900146484375,
+    "update_defined": false,
+    "component_census": {
+        "Octree": 1,
+        "DebugRenderer": 1,
+        "PhysicsWorld": 1,
+        "Zone": 1,
+        "Light": 1,
+        "RigidBody": 61,
+        "CollisionShape": 63,
+        "StaticModel": 244,
+        "CustomGeometry": 3,
+        "RaycastVehicle": 1
+    },
+    "test_result": "NOT_RUN",
+    "test_assertions": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0
+    },
+    "test_issues": [],
+    "missing_resources": [],
+    "missing_engine_resources": [],
+    "summary": {
+        "lua_errors": 0,
+        "resource_errors": 0,
+        "engine_errors": 0,
+        "total_errors": 0
+    }
+}
