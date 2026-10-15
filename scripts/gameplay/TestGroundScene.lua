@@ -65,10 +65,10 @@ function Ground:Init(scene)
     self:Box("StartLine",Vector3(0,0.024,4.5),Vector3(11.2,0.012,0.20),self.line)
     self:Lighting()
     self.person=self.scene:CreateChild("PersonPlaceholder",LOCAL)
-    -- 车头朝画面右侧，车手站在车头右前方中景、背对镜头，构成参考图的右前 3/4 低机位构图。
-    self.person.position=Vector3(4.1,0.015,-0.4)
-    self.person.rotation=Quaternion(0,-40,0)
-    -- 仍用灰色几何占位，不确定角色外形；正面亮相、双脚分开、单臂举拳、另一手叉腰。
+    -- 参考构图：人物在车头右侧，与车保持间隔、背向镜头，不增添头盔或服饰。
+    self.person.position=Vector3(4.65,0.015,-0.42)
+    self.person.rotation=Quaternion(0,-57,0)
+    -- 保留已有灰色占位与举拳姿态，只调整站位和朝向。
     self:Mesh("HeadPlaceholder",self.sphere,Vector3(0,1.56,0.015),Vector3(0.34,0.38,0.34),self.placeholderColor,self.person)
     local torso=self:Mesh("TorsoPlaceholder",self.box,Vector3(0,1.15,0),Vector3(0.46,0.58,0.28),self.placeholderColor,self.person)
     torso.rotation=Quaternion(0,0,-4)

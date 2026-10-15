@@ -16,7 +16,7 @@ function App:Init()
     self.ground=GroundScene.Create(self.scene)
     local prefab=cache:GetResource("XMLFile","model/mpv_seven_seat/Prefabs/OriginalMPV.prefab")
     assert(prefab,"主界面车辆预制体缺失")
-    -- 车头转向世界+X：相机从车辆右前方看过去，车头朝画面右侧、左侧车身可见。
+    -- 车头朝世界+X；固定相机看向车头与左侧车身，不改变车辆模型或材质。
     self.car=self.scene:InstantiateXML(prefab:GetRoot(),Vector3(0,0.015,0),Quaternion(0,90,0),LOCAL)
     assert(self.car,"主界面车辆加载失败")
     self.car.name="MenuParkedMPV"
@@ -36,7 +36,7 @@ function App:Init()
     self.camera=self.cameraNode:CreateComponent("Camera",LOCAL)
     self.camera.nearClip=0.1
     self.camera.farClip=1800
-    self.camera.fov=38
+    self.camera.fov=35
     self.focused=true
     self.closed=false
     self.pendingAction=""
@@ -45,8 +45,8 @@ function App:Init()
     self.viewportWidth=0.0
     self.viewportHeight=0.0
     -- 热点规划（车辆局部坐标，+Z车头；整车已转向画面右侧）：
-    -- 可见侧为车辆局部 +X；车门 x=+1.0,z=+0.7；车尾在画面外，档案改锚定同侧靠后位置。
-    -- 三个拾取盒分离；射线先转到各对象局部，取最近命中。
+    -- 可见侧为车辆局部 +X；车门 z=+0.7、后侧车身 z=-1.7，拾取盒互不重叠。
+    -- 射线先转到各对象局部，取最近命中；入口按钮在左侧留白区排列。
     -- 只做主界面拾取，不创建人物/车身碰撞或进入测试流程。
     self.hotspots={
         {id="person",title="人物 · 占位",node=self.person,anchor=Vector3(0,1.30,0),
@@ -63,7 +63,7 @@ function App:Init()
     renderer:SetViewport(0,Viewport:new(self.scene,self.camera))
     input.mouseMode=MM_ABSOLUTE
     self:PostUpdate(0)
-    print(string.format("[直道主界面] 静态车辆%d模型/%d材质槽；热点：人物、车门、车头",#drawables,materialCount))
+    print(string.format("[直道主界面] 静态车辆%d模型/%d材质槽；热点：人物、车门、后侧车身",#drawables,materialCount))
 end
 
 function App:Pick(x,y)
@@ -145,16 +145,17 @@ function App:PostUpdate(dt)
     if width~=self.viewportWidth or height~=self.viewportHeight then
         self.viewportWidth=width
         self.viewportHeight=height
-        -- 右前 3/4 低机位：车头朝画面右侧、车身向左侧延伸，车手在画面右侧近景背对镜头，
-        -- 直道向远方作背景。不开放驾驶或自由相机。
-        -- 窄屏仅沿同一视线后退，按宽高比保持人车完整，不切换高位俯视。
-        local target=Vector3(0.25,1.00,0.3)
-        local viewOffset=Vector3(5.6,-0.25,-6.9)
+        -- 参考构图：低机位前侧3/4视角，车辆居中偏下、人物在右侧，左侧保留入口空间。
+        -- MPV比参考跑车更高，保留真实尺寸，不为模仿轮廓压扁模型。
+        -- 窄屏保持同一水平视角后退；机位不随负Y偏移降到地面以下。
+        local target=Vector3(0.10,1.48,0.06)
+        local viewOffset=Vector3(7.66,-0.83,-4.99)
         local aspect=width/math.max(height,1)
-        local framingScale=math.max(1,1.35/math.max(aspect,0.1))
-        self.cameraNode.position=target+viewOffset*framingScale
+        local framingScale=math.max(1,1.6/math.max(aspect,0.1))
+        local cameraPosition=target+viewOffset*framingScale
+        self.cameraNode.position=Vector3(cameraPosition.x,0.65,cameraPosition.z)
         self.cameraNode:LookAt(target)
-        print(string.format("[直道主界面] 右前3/4低机位 %.2f:1，机位缩放%.2f，FOV %.0f",aspect,framingScale,self.camera.fov))
+        print(string.format("[直道主界面] 前侧3/4参考构图 %.2f:1，机位缩放%.2f，FOV %.0f",aspect,framingScale,self.camera.fov))
     end
     self.ui:UpdateAnchors(self.camera)
 end
