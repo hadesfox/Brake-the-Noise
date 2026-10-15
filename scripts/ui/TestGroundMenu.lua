@@ -1,156 +1,120 @@
--- 实时主界面与试驾HUD，使用UI组件，不额外建立NanoVG渲染管线。
-local UI = require("urhox-libs/UI")
-local GroundUI = {}
-GroundUI.__index = GroundUI
+-- 主界面仅保留场景热点与占位反馈，不制作驾驶HUD或未确认的功能页。
+local UI=require("urhox-libs/UI")
+local Menu={}
+Menu.__index=Menu
 
-function GroundUI.Create(onAction)
-    local self = setmetatable({}, GroundUI)
-    self:Init(onAction)
+function Menu.Create(hotspots,onAction,onPointer)
+    local self=setmetatable({},Menu)
+    self:Init(hotspots,onAction,onPointer)
     return self
 end
 
-function GroundUI:Init(onAction)
-    -- 在查阅预置风格后沿用基础主题结构，配色匹配低模山谷与道路警示色。
-    local theme = UI.Theme.ExtendTheme(UI.Theme.defaultTheme, {
-        colors = {
-            primary = {229,155,66,255}, primaryHover = {247,178,90,255}, primaryPressed = {194,123,44,255},
-            secondary = {53,91,85,255}, secondaryHover = {69,112,104,255}, secondaryPressed = {36,66,61,255},
-            background = {22,32,31,255}, surface = {32,45,43,244}, text = {241,237,214,255},
-            textSecondary = {180,195,177,255}, border = {104,128,111,100},
-        },
-        components = { Button = { height = 48, borderRadius = 4, fontSize = 14 }, Label = { fontFamily = "sans" } },
+function Menu:Init(hotspots,onAction,onPointer)
+    local theme=UI.Theme.ExtendTheme(UI.Theme.defaultTheme,{
+        colors={primary={225,157,70,255},primaryHover={244,181,103,255},primaryPressed={182,125,52,255},
+            secondary={43,64,61,255},secondaryHover={67,93,84,255},secondaryPressed={29,46,43,255},
+            text={242,239,222,255},textSecondary={185,194,181,255}},
+        components={Button={height=42,borderRadius=3,fontSize=12}},
     })
-    UI.Init({ theme = theme, scale = UI.Scale.DEFAULT,
-        fonts = {{family="sans",weights={normal="Fonts/MiSans-Regular.ttf",bold="Fonts/MiSans-Regular.ttf"}}} })
-    self.onAction = onAction
-    self.mode = "menu"
-    self.detail = UI.Label { text = "真实场景 · 自动巡航", fontSize = 11, fontColor = {180,195,177,255} }
-    self.speed = UI.Label { text = "00", fontSize = 36, fontColor = {241,237,214,255} }
-    self.status = UI.Label { text = "正在驶入测试场", fontSize = 12, fontColor = {180,195,177,255} }
-    self.startButton = UI.Button { text = "开始试驾  →", width = "100%", textColor = {26,35,30,255},
-        onClick = function() self.onAction("drive") end }
-    self.overviewButton = UI.Button { text = "场地全景", variant = "secondary", width = "100%",
-        onClick = function() self.onAction("overview") end }
-    self.title = UI.Label {text="山谷试车场",fontSize=30,fontColor={241,237,214,255}}
-    self.tagline = UI.Label {text="把路，开成你的主界面。",fontSize=13,fontColor={180,195,177,255}}
-    self.divider = UI.Panel {height=1,backgroundColor={104,128,111,90},marginVertical=3}
-    self.features = UI.Label {text="环形道路 / 减速带 / 悬挂坡 / 防撞区",fontSize=10,
-        whiteSpace="normal",fontColor={180,195,177,255}}
-    self.shortcuts = UI.Label {text="Enter 试驾 · C 视角 · Esc 返回",fontSize=10,fontColor={142,163,147,255}}
-    self.menu = UI.Panel {
-        position="absolute", left=28, top="14%", width=330, maxWidth="43%", padding=22, gap=14,
-        backgroundColor={22,32,31,234}, borderLeftWidth=3, borderLeftColor={229,155,66,255},
-        children={
-            UI.Label{text="MPV / PROVING GROUND",fontSize=10,fontColor={229,155,66,255}},
-            self.title,self.tagline,self.divider,self.detail,self.startButton,self.overviewButton,
-            self.features,self.shortcuts,
-        },
-    }
-    self.returnButton = UI.Button {text="返回主界面",variant="secondary",onClick=function()self.onAction("menu")end}
-    self.resetButton = UI.Button {text="复位车辆",variant="secondary",onClick=function()self.onAction("reset")end}
-    self.cameraButton = UI.Button {text="切换视角",variant="secondary",onClick=function()self.onAction("camera")end}
-    self.driveBar = UI.Panel {
-        position="absolute",top=18,left=18,right=18,flexDirection="row",gap=8,visible=false,pointerEvents="box-none",
-        children={self.returnButton,self.resetButton,self.cameraButton},
-    }
-    self.throttle = UI.Button{text="加速",width=76,height=56}
-    self.reverse = UI.Button{text="倒车",variant="secondary",width=76,height=56}
-    self.left = UI.Button{text="←",variant="secondary",width=64,height=56}
-    self.right = UI.Button{text="→",variant="secondary",width=64,height=56}
-    self.brake = UI.Button{text="刹车",variant="secondary",width=76,height=56}
-    self.controls = UI.Panel {
-        position="absolute",bottom=20,left=20,right=20,flexDirection="row",justifyContent="space-between",
-        visible=false,pointerEvents="box-none",children={
-            UI.Panel{flexDirection="row",gap=8,children={self.left,self.right}},
-            UI.Panel{flexDirection="row",gap=8,children={self.reverse,self.brake,self.throttle}},
-        },
-    }
-    self.telemetry = UI.Panel {
-        position="absolute",right=24,top=24,width=175,padding=14,gap=4,backgroundColor={22,32,31,220},
-        pointerEvents="none",children={
-            UI.Label{text="LIVE / 实时车辆",fontSize=10,fontColor={229,155,66,255}},
-            UI.Panel{flexDirection="row",alignItems="baseline",gap=6,children={self.speed,
-                UI.Label{text="km/h",fontSize=11,fontColor={180,195,177,255}}}},self.status,
-        },
-    }
-    self.footer = UI.Label{text="01  山谷试车场     /     七座 MPV     /     1800 kg 测试配置",fontSize=10,
-        position="absolute",bottom=20,left=28,fontColor={241,237,214,255}}
-    UI.SetRoot(UI.Panel{width="100%",height="100%",pointerEvents="box-none",children={
+    UI.Init({theme=theme,scale=UI.Scale.DEFAULT,
+        fonts={{family="sans",weights={normal="Fonts/MiSans-Regular.ttf"}}}})
+    self.hotspots=hotspots
+    self.onAction=onAction
+    self.buttons={} ---@type table<string,Button>
+    self.dots={} ---@type table<string,Panel>
+    self.hover=""
+    self.selected=""
+    self.feedbackTitle=UI.Label{text="",fontSize=15,fontColor={242,239,222,255}}
+    self.feedbackText=UI.Label{text="",fontSize=11,whiteSpace="normal",fontColor={185,194,181,255}}
+    self.closeButton=UI.Button{text="收起",variant="secondary",width=76,onClick=function()self.onAction("close")end}
+    self.feedback=UI.Panel{position="absolute",bottom=18,left=18,width=310,maxWidth="90%",padding=14,gap=8,
+        backgroundColor={24,34,32,238},visible=false,children={self.feedbackTitle,self.feedbackText,self.closeButton}}
+    self.header=UI.Panel{position="absolute",top=20,left=24,pointerEvents="none",gap=4,children={
+        UI.Label{text="舆论刹车",fontSize=26,fontColor={38,53,49,255}},
+        UI.Label{text="零百加速直道 · 主界面构图",fontSize=11,fontColor={58,73,67,255}},
+    }}
+    self.hint=UI.Label{text="点击人物、车门或车尾 · 当前仅演示主界面入口",fontSize=11,
+        position="absolute",bottom=18,left=24,fontColor={235,234,218,255}}
+    self.sceneInput=UI.Panel{width="100%",height="100%",position="absolute",left=0,top=0,
+        onPointerDown=function(event)onPointer(event,"down")end,
+        onPointerUp=function(event)onPointer(event,"up")end,
+        onPointerMove=function(event)onPointer(event,"move")end,
+        onPointerCancel=function(event)onPointer(event,"cancel")end}
+    self.overlay=UI.Panel{width="100%",height="100%",position="absolute",left=0,top=0,pointerEvents="box-none"}
+    for _,hotspot in ipairs(hotspots) do
+        local id=hotspot.id
+        local dot=UI.Panel{position="absolute",width=7,height=7,borderRadius=4,
+            backgroundColor={235,170,82,255},pointerEvents="none"}
+        local button=UI.Button{text=hotspot.title,variant="secondary",width=128,height=42,
+            position="absolute",left=0,top=0,borderWidth=1,borderColor={197,211,188,130},
+            onClick=function()self.onAction(id)end,
+            onPointerEnter=function()self:SetHover(id)end,
+            onPointerLeave=function()self:SetHover("")end}
+        self.buttons[id]=button
+        self.dots[id]=dot
+        self.overlay:AddChild(dot)
+        self.overlay:AddChild(button)
+    end
+    UI.SetRoot(UI.Panel{width="100%",height="100%",children={self.sceneInput,self.overlay,
         UI.SafeAreaView{width="100%",height="100%",nativeMenuInset=true,pointerEvents="box-none",
-            children={self.menu,self.driveBar,self.controls,self.telemetry,self.footer}},
+            children={self.header,self.hint,self.feedback}},
     }})
-    self.layoutWidth=0.0
-    self.layoutHeight=0.0
     UI.Layout()
-    self:Layout()
 end
 
-function GroundUI:Layout()
-    -- 使用UI基准像素与安全区，不用物理分辨率判断紧凑模式。
-    local _,_,width,height=UI.GetSafeContentArea()
-    if width==self.layoutWidth and height==self.layoutHeight then return end
-    self.layoutWidth=width
-    self.layoutHeight=height
-    local portrait=width<height
-    local compact=height<620 or width<760
-    local menuWidth=portrait and math.min(330,width-32) or math.min(330,width*0.43)
-    self.menu:SetStyle({left=compact and 16 or 28,width=menuWidth,maxWidth="100%",
-        top=portrait and YGUndefined or (compact and 20 or "14%"),
-        bottom=portrait and 16 or YGUndefined,padding=compact and 16 or 22,gap=compact and 10 or 14})
-    self.title:SetFontSize(compact and 24 or 30)
-    self.tagline:SetVisible(not compact)
-    self.divider:SetVisible(not compact)
-    self.shortcuts:SetVisible(not compact)
-    self.features:SetVisible(not compact or height>=500)
-    self.footer:SetVisible(not compact and self.mode~="drive")
-    self.telemetry:SetStyle({right=compact and 16 or 24,width=compact and 165 or 175})
-    self.driveBar:SetStyle({left=12,right=12})
-    for _,button in ipairs({self.returnButton,self.resetButton,self.cameraButton}) do
-        button:SetStyle({flexGrow=1,flexBasis=0,flexShrink=1,minWidth=0,fontSize=compact and 12 or 14})
+function Menu:GetViewportSize()
+    return UI.GetViewportSize()
+end
+
+function Menu:UpdateAnchors(camera)
+    local width,height=UI.GetViewportSize()
+    local safeX,safeY,safeWidth,safeHeight=UI.GetSafeContentArea()
+    local small=height<560
+    self.header:SetStyle({top=small and 12 or 20,left=small and 16 or 24})
+    local used={} ---@type table[]
+    for _,hotspot in ipairs(self.hotspots) do
+        local screen=camera:WorldToScreenPoint(hotspot.node:LocalToWorld(hotspot.anchor))
+        local x,y=screen.x*width,screen.y*height
+        local left=math.max(safeX+12,math.min(safeX+safeWidth-140,x+hotspot.offset.x))
+        local top=math.max(safeY+96,math.min(safeY+safeHeight-82,y+hotspot.offset.y))
+        for _,rect in ipairs(used) do
+            if math.abs(left-rect.x)<136 and math.abs(top-rect.y)<48 then top=math.min(top+52,safeY+safeHeight-70) end
+        end
+        used[#used+1]={x=left,y=top}
+        self.buttons[hotspot.id]:SetStyle({left=left,top=top})
+        self.dots[hotspot.id]:SetStyle({left=x-3.5,top=y-3.5})
     end
-    self.controls:SetStyle({left=12,right=12})
-    for _,button in ipairs({self.left,self.right}) do button:SetWidth(width<480 and 54 or 64) end
-    for _,button in ipairs({self.reverse,self.brake,self.throttle}) do button:SetWidth(width<480 and 58 or 76) end
+    self.hint:SetVisible(self.selected=="")
+    self.hint:SetText(width<600 and "点击人物或车辆部位" or "点击人物、车门或车尾 · 当前仅演示主界面入口")
 end
 
-function GroundUI:ClearControls()
-    for _,button in ipairs({self.throttle,self.reverse,self.left,self.right,self.brake}) do
-        button:SetState({pressed=false})
+function Menu:SetHover(id)
+    if self.hover==id then return end
+    self.hover=id
+    for key,button in pairs(self.buttons) do
+        button:SetStyle({borderColor=key==id and {235,170,82,255} or {197,211,188,130}})
     end
 end
 
-function GroundUI:SetMode(mode)
-    self:ClearControls()
-    self.mode = mode
-    local driving = mode == "drive"
-    self.menu:SetVisible(not driving)
-    self.driveBar:SetVisible(driving)
-    self.controls:SetVisible(driving)
-    self.footer:SetVisible(not driving)
-    self.telemetry:SetStyle({top=driving and 82 or 24})
-    self.overviewButton:SetText(mode == "overview" and "返回车辆近景" or "场地全景")
-    self.layoutWidth=0
-    self:Layout()
+function Menu:ShowSelection(id)
+    self.selected=id
+    local title=""
+    for _,hotspot in ipairs(self.hotspots) do if hotspot.id==id then title=hotspot.title end end
+    self.feedbackTitle:SetText(title)
+    self.feedbackText:SetText(id=="person" and "人物为灰色占位。本轮不确定外形，也不进入人物制作。" or
+        "入口已选中，当前仅为主界面交互占位，不启动测试或档案流程。")
+    self.feedback:SetVisible(true)
+    self.hint:SetVisible(false)
 end
 
-function GroundUI:ReadControls()
-    return {
-        throttle = self.throttle.state.pressed == true,
-        reverse = self.reverse.state.pressed == true,
-        left = self.left.state.pressed == true,
-        right = self.right.state.pressed == true,
-        brake = self.brake.state.pressed == true,
-    }
+function Menu:CloseSelection()
+    self.selected=""
+    self.feedback:SetVisible(false)
+    self.hint:SetVisible(true)
 end
 
-function GroundUI:Update(speed, grounded, distance)
-    self.speed:SetText(string.format("%02d",math.floor(speed*3.6+0.5)))
-    self.status:SetText(string.format("接地 %d/4 · %.0f m",grounded,distance))
-    self.detail:SetText(self.mode == "overview" and "场地全景 · 车辆仍在真实运行" or "实时场景 · 车辆正在自动巡航")
-end
-
-function GroundUI:Shutdown()
+function Menu:Shutdown()
     UI.Shutdown()
 end
 
-return GroundUI
+return Menu

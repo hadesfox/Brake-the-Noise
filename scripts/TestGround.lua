@@ -4,7 +4,7 @@ local TestGroundApp = require("gameplay.TestGroundApp")
 local app
 
 function Start()
-    graphics.windowTitle = "山谷试车场 · 实时主界面"
+    graphics.windowTitle = "舆论刹车 · 直道主界面"
     app = TestGroundApp.Create()
     SubscribeToEvent("Update", "HandleTestGroundUpdate")
     SubscribeToEvent("PostUpdate", "HandleTestGroundCamera")
@@ -27,9 +27,7 @@ end
 ---@param eventData InputFocusEventData
 function HandleTestGroundFocus(eventType,eventData)
     if app then
-        app.focused=eventData:GetBool("Focus") and not eventData:GetBool("Minimized")
-        app.accumulator=0
-        app.ui:ClearControls()
+        app:SetFocused(eventData:GetBool("Focus") and not eventData:GetBool("Minimized"))
     end
 end
 
