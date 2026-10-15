@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<material>
+	<technique name="Techniques/PBR/PBRDiff.xml" quality="0" loddistance="0" />
+	<parameter name="MatDiffColor" value="0.141176 0.164706 0.188235 1" />
+	<parameter name="Metallic" value="0" />
+	<parameter name="Roughness" value="0.92" />
+</material>

@@ -1,0 +1,69 @@
+{
+  "units": "meter",
+  "up_axis": "Y",
+  "forward_axis": "+Z",
+  "triangles": 19512,
+  "material_meshes": 36,
+  "seat_layout": "2+2+2",
+  "wheel_radius": 0.425,
+  "wheel_axle_axis": "X",
+  "steering_rotation_axis": "Z",
+  "wheel_nodes": [
+    "WheelFrontLeft",
+    "WheelRearLeft",
+    "WheelFrontRight",
+    "WheelRearRight"
+  ],
+  "steering_node": "SteeringWheel",
+  "part_positions": {
+    "Body": [
+      0,
+      0,
+      0
+    ],
+    "Interior": [
+      0,
+      0,
+      0
+    ],
+    "Roof": [
+      0,
+      0,
+      0
+    ],
+    "Glass": [
+      0,
+      0,
+      0
+    ],
+    "WheelFrontLeft": [
+      -1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearLeft": [
+      -1.04,
+      0.44,
+      -1.76
+    ],
+    "WheelFrontRight": [
+      1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearRight": [
+      1.04,
+      0.44,
+      -1.76
+    ],
+    "SteeringWheel": [
+      -0.52,
+      1.37,
+      0.68
+    ]
+  },
+  "side_windows": "open",
+  "windshield": "transparent",
+  "driving_logic": false,
+  "geometry_source": "认可车壳开窗；独立四轮；新增真实驾驶室与六座内饰"
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<node>
+	<attribute name="Is Enabled" value="true" />
+	<attribute name="Name" value="Interior" />
+	<attribute name="Tags" value="" />
+	<attribute name="Position" value="0 0 0" />
+	<attribute name="Rotation" value="1 0 0 0" />
+	<attribute name="Scale" value="1 1 1" />
+	<attribute name="Variables" value="" />
+	<component type="StaticModel">
+		<attribute name="Model" value="Model;/workspace/assets/model/mpv_detailed/Models/Interior.mdl" />
+		<attribute name="Material" value="Material;/workspace/assets/model/mpv_detailed/Materials/Interior_00_MatteAlloy.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_01_CharcoalTrim.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_02_TaillampRed.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_03_SandUpholstery.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_04_SeatInsert.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_05_WalnutDashboard.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_06_InstrumentTeal.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_07_ScreenBlack.xml;/workspace/assets/model/mpv_detailed/Materials/Interior_08_CabinFloor.xml" />
+		<attribute name="Cast Shadows" value="true" />
+	</component>
+</node>

@@ -1,0 +1,68 @@
+{
+  "units": "meter",
+  "up_axis": "Y",
+  "forward_axis": "+Z",
+  "triangles": 20188,
+  "material_meshes": 36,
+  "seat_layout": "2+2+2",
+  "wheel_radius": 0.425,
+  "wheel_axle_axis": "X",
+  "steering_rotation_axis": "Z",
+  "part_positions": {
+    "Body": [
+      0,
+      0,
+      0
+    ],
+    "Interior": [
+      0,
+      0,
+      0
+    ],
+    "Roof": [
+      0,
+      0,
+      0
+    ],
+    "Glass": [
+      0,
+      0,
+      0
+    ],
+    "WheelFrontLeft": [
+      -1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearLeft": [
+      -1.04,
+      0.44,
+      -1.76
+    ],
+    "WheelFrontRight": [
+      1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearRight": [
+      1.04,
+      0.44,
+      -1.76
+    ],
+    "SteeringWheel": [
+      -0.52,
+      1.37,
+      0.68
+    ]
+  },
+  "side_windows": "open",
+  "windshield": "transparent",
+  "driving_logic": false,
+  "validation": {
+    "mdl_models": 9,
+    "relative_references": true,
+    "independent_wheels": true,
+    "independent_steering": true,
+    "engine_visual_test": false
+  }
+}

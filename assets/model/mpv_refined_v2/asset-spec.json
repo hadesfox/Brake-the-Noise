@@ -1,0 +1,69 @@
+{
+  "units": "meter",
+  "up_axis": "Y",
+  "forward_axis": "+Z",
+  "triangles": 18758,
+  "meshes": 35,
+  "seat_layout": "2+2+2",
+  "wheel_radius": 0.425,
+  "wheel_axle_axis": "X",
+  "steering_rotation_axis": "Z",
+  "wheel_nodes": [
+    "WheelFrontLeft",
+    "WheelRearLeft",
+    "WheelFrontRight",
+    "WheelRearRight"
+  ],
+  "steering_node": "SteeringWheel",
+  "part_positions": {
+    "Body": [
+      0,
+      0,
+      0
+    ],
+    "Interior": [
+      0,
+      0,
+      0
+    ],
+    "Roof": [
+      0,
+      0,
+      0
+    ],
+    "Glass": [
+      0,
+      0,
+      0
+    ],
+    "WheelFrontLeft": [
+      -1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearLeft": [
+      -1.04,
+      0.44,
+      -1.76
+    ],
+    "WheelFrontRight": [
+      1.04,
+      0.44,
+      1.64
+    ],
+    "WheelRearRight": [
+      1.04,
+      0.44,
+      -1.76
+    ],
+    "SteeringWheel": [
+      -0.52,
+      1.37,
+      0.68
+    ]
+  },
+  "side_windows": "open",
+  "windshield": "transparent",
+  "driving_logic": false,
+  "geometry_source": "保留认可车壳，开窗与替换原轮胎；新增驾驶室和六座内饰"
+}
