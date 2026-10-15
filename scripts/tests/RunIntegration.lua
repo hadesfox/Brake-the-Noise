@@ -171,9 +171,10 @@ local function BuildSteps()
     -- 同帧去重：同一帧内先触屏锁定力度，再按键盘；第二次必须被 ActionGate 拒绝。
     Step("同帧触屏加键盘只结算一次", function()
         Pointer(true, "touch", MOUSEB_LEFT)
-        Check(ChanceCount() == 1, "触屏锁定力度结算一次")
+        Check(Has("decisionContinue"), "触屏锁定力度结算一次")
+        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "同帧触屏只记一次机会")
         KeyDown(false)
-        Check(ChanceCount() == 1, "同帧键盘没有重复结算")
+        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "同帧键盘没有重复结算")
         KeyUp()
         Pointer(false, "touch", MOUSEB_LEFT)
         return true
@@ -259,7 +260,10 @@ local function BuildSteps()
         return true
     end)
     Step("发帖进入出口", function()
-        Click("decisionPost")
+        if Has("decisionPost") then
+            Click("decisionPost")
+            return false
+        end
         return Has("noticeBack")
     end)
     Step("发帖出口已离开驾驶舱", function()
