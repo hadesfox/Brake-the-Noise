@@ -169,14 +169,17 @@ local function BuildSteps()
         return true
     end)
     -- 同帧去重：同一帧内先触屏锁定力度，再按键盘；第二次必须被 ActionGate 拒绝。
+    -- 场景切换延迟一帧，所以这里只验证"同帧第二次输入没被处理"，界面在下一步检查。
     Step("同帧触屏加键盘只结算一次", function()
         Pointer(true, "touch", MOUSEB_LEFT)
-        Check(Has("decisionContinue"), "触屏锁定力度结算一次")
-        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "同帧触屏只记一次机会")
         KeyDown(false)
-        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "同帧键盘没有重复结算")
         KeyUp()
         Pointer(false, "touch", MOUSEB_LEFT)
+        return true
+    end)
+    Step("同帧输入只结算一次", function()
+        Check(Has("decisionContinue"), "触屏锁定力度结算一次")
+        Check(Text("decisionSummary"):find("1 / 3", 1, true) ~= nil, "同帧只记一次机会")
         return true
     end)
     Step("结算后进入选择界面", function()
