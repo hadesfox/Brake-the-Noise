@@ -4,6 +4,6 @@
 	<texture unit="diffuse" name="uuid://ADB76UjdAEqjBGb4rHy-JciZ" />
 	<texture unit="normal" name="uuid://DEKN8SeCIWGHFIaUHJjnRLWR" />
 	<parameter name="MatDiffColor" value="1 1 1 1" />
-	<parameter name="Metallic" value="1" />
+	<parameter name="Metallic" value="0" />
 	<parameter name="Roughness" value="1" />
 </material>
