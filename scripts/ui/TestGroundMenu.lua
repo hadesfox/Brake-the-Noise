@@ -33,7 +33,7 @@ function Menu:Init(hotspots,onAction,onPointer)
         UI.Label{text="舆论刹车",fontSize=26,fontColor={38,53,49,255}},
         UI.Label{text="零百加速直道 · 主界面构图",fontSize=11,fontColor={58,73,67,255}},
     }}
-    self.hint=UI.Label{text="点击人物、车门或车头 · 当前仅演示主界面入口",fontSize=11,
+    self.hint=UI.Label{text="点击人物或车身部位 · 当前仅演示主界面入口",fontSize=11,
         position="absolute",bottom=18,left=24,fontColor={235,234,218,255}}
     self.sceneInput=UI.Panel{width="100%",height="100%",position="absolute",left=0,top=0,
         onPointerDown=function(event)onPointer(event,"down")end,
@@ -92,12 +92,18 @@ function Menu:UpdateAnchors(camera)
         for _,rect in ipairs(used) do
             if math.abs(left-rect.x)<136 and math.abs(top-rect.y)<48 then top=math.min(top+52,safeY+safeHeight-70) end
         end
+        -- 横屏只重新排列已有入口，左侧留白区不添加参考图里的新菜单或装饰。
+        if width>=height then
+            local row=hotspot.id=="start" and 0 or (hotspot.id=="archive" and 1 or 2)
+            left=safeX+math.max(16,safeWidth*0.035)
+            top=safeY+math.max(100,safeHeight*0.28)+row*54
+        end
         used[#used+1]={x=left,y=top}
         self.buttons[hotspot.id]:SetStyle({left=left,top=top})
         self.dots[hotspot.id]:SetStyle({left=x-3.5,top=y-3.5})
     end
     self.hint:SetVisible(self.selected=="")
-    self.hint:SetText(width<600 and "点击人物或车辆部位" or "点击人物、车门或车头 · 当前仅演示主界面入口")
+    self.hint:SetText(width<600 and "点击人物或车辆部位" or "点击人物或车身部位 · 当前仅演示主界面入口")
 end
 
 function Menu:SetHover(id)

@@ -23,6 +23,25 @@ function Start()
     SubscribeToEvent("PostUpdate","HandleMenuAcceptanceCamera")
 end
 
+local function ProjectBounds(node)
+    local left,top,right,bottom=math.huge,math.huge,-math.huge,-math.huge
+    for _,drawable in ipairs(node:GetComponents("StaticModel",true)) do
+        local bounds=drawable.worldBoundingBox
+        for _,x in ipairs({bounds.min.x,bounds.max.x}) do
+            for _,y in ipairs({bounds.min.y,bounds.max.y}) do
+                for _,z in ipairs({bounds.min.z,bounds.max.z}) do
+                    local screen=app.camera:WorldToScreenPoint(Vector3(x,y,z))
+                    left=math.min(left,screen.x)
+                    right=math.max(right,screen.x)
+                    top=math.min(top,screen.y)
+                    bottom=math.max(bottom,screen.y)
+                end
+            end
+        end
+    end
+    return left,top,right,bottom
+end
+
 local function CheckHotspots()
     local w,h=UI.GetViewportSize()
     local visible=true
@@ -61,28 +80,27 @@ function HandleMenuAcceptance(eventType,eventData)
         local rear=app.car:LocalToWorld(Vector3(0,1,-2.6))
         local cameraPosition=app.cameraNode.worldPosition
         Check("镜头位于车头正面",(front-cameraPosition):Length()<(rear-cameraPosition):Length())
-        Check("低机位近景",app.camera.fov<=36 and app.cameraNode.rotation:PitchAngle()<5)
+        Check("前侧低机位",app.camera.fov<=40 and math.abs(app.cameraNode.rotation:PitchAngle())<7)
+        Check("镜头始终位于路面上方",cameraPosition.y>0.1)
         local fist=app.person:GetChild("VictoryFist")
         local head=app.person:GetChild("HeadPlaceholder")
-        Check("车手举拳胜利姿态",fist~=nil and head~=nil and fist.worldPosition.y>head.worldPosition.y+0.25)
-        local personModels=app.person:GetComponents("StaticModel",true)
-        local top=1.0
-        local bottom=0.0
-        for _,drawable in ipairs(personModels) do
-            local bounds=drawable.worldBoundingBox
-            for _,x in ipairs({bounds.min.x,bounds.max.x}) do
-                for _,y in ipairs({bounds.min.y,bounds.max.y}) do
-                    for _,z in ipairs({bounds.min.z,bounds.max.z}) do
-                        local screen=app.camera:WorldToScreenPoint(Vector3(x,y,z))
-                        top=math.min(top,screen.y)
-                        bottom=math.max(bottom,screen.y)
-                    end
-                end
-            end
-        end
+        Check("保留已有举拳姿态",fist~=nil and head~=nil and fist.worldPosition.y>head.worldPosition.y+0.25)
+        local personLeft,top,personRight,bottom=ProjectBounds(app.person)
+        local carLeft,carTop,carRight,carBottom=ProjectBounds(app.car)
+        Check("人车完整入镜",personLeft>0.02 and personRight<0.98 and top>0.05 and bottom<0.95 and
+            carLeft>0.02 and carRight<0.98 and carTop>0.05 and carBottom<0.95)
         local w,h=UI.GetViewportSize()
-        Check("车手完整入镜",top>0.05 and bottom<0.95)
+        local personCenter=(personLeft+personRight)*0.5
+        local carCenter=(carLeft+carRight)*0.5
+        Check("人物位于车辆右侧",personCenter>carCenter and personCenter>0.7)
+        Check("横屏左侧留白",w<h or carLeft>0.22)
         Check("横屏主体足够近",w<h or bottom-top>0.45)
+        if w>=h then
+            local button=app.ui.buttons.start:GetAbsoluteLayout()
+            Check("现有入口排列在左侧",button.x+button.w<carLeft*w)
+        end
+        print(string.format("[构图投影] 车[%.3f,%.3f]-[%.3f,%.3f] 人[%.3f,%.3f]-[%.3f,%.3f]",
+            carLeft,carTop,carRight,carBottom,personLeft,top,personRight,bottom))
         UI.Layout()
         CheckHotspots()
     elseif frame==120 then
