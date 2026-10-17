@@ -50,9 +50,8 @@ local force = nil
 local gate = ActionGate.Create()
 local paused = false
 local skipNextUpdate = false
--- 测试完成后的结果展示延迟计时器
-local resultDisplayTimer = 0
-local resultDisplayDuration = 3.0  -- 显示结果3秒后再跳转
+-- 测试完成后等待手动确认进入下一轮
+local waitingForResultConfirm = false
 ---@type string
 local scene = SCENE_MENU
 -- 驾驶舱内的两轮阶段，取值与 ui/BrakeTestDemo 的阶段常量一致。
@@ -97,9 +96,8 @@ local function RefreshCockpit()
     if cockpitView and session and landing and force then
         local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
         cockpitView:RefreshHud(session, shoe.name)
-        -- 传递结果展示倒计时
-        local timer = resultDisplayTimer > 0 and resultDisplayTimer or nil
-        cockpitView.testView:Refresh(landing, force, phase, lastTestResult, timer)
+        -- 传递是否等待确认的状态
+        cockpitView.testView:Refresh(landing, force, phase, lastTestResult, waitingForResultConfirm)
     end
 end
 
@@ -147,7 +145,7 @@ function GoToMenu()
     prepSelection = nil
     pendingOutcome = nil
     landingRecord = nil
-    resultDisplayTimer = 0  -- 重置计时器
+    waitingForResultConfirm = false  -- 重置状态
     gate:ClearHeld()
     SetSceneRoot(MainMenu.Create(function() Defer(StartTest) end,
         function() Defer(OpenArchive) end).root)
@@ -213,7 +211,7 @@ function OnBrakeTime(selection)
     phase = BrakeTestDemo.PHASE_LANDING
     pendingOutcome = nil
     lastTestResult = nil  -- 清空上次结果
-    resultDisplayTimer = 0  -- 重置计时器
+    waitingForResultConfirm = false  -- 重置状态
     preDriveView = nil
     -- 每次进入判定都从新的一次落点开始；换车沿用同一会话。
     if not landing.moving then landing:Start() end
