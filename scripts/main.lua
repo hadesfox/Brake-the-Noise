@@ -69,6 +69,9 @@ local pendingOutcome = nil
 -- 角色准备的选择结果；上车过场与开车前准备都会用到。
 ---@type PrepSelection?
 local prepSelection = nil
+-- 最后一次测试的方案A结果（用于UI显示）
+---@type table?
+local lastTestResult = nil
 -- 场景切换延迟到下一帧执行：避免在控件自己的事件回调里销毁控件树。
 ---@type fun()?
 local deferredAction = nil
@@ -91,7 +94,7 @@ local function RefreshCockpit()
     if cockpitView and session and landing and force then
         local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
         cockpitView:RefreshHud(session, shoe.name)
-        cockpitView.testView:Refresh(landing, force, phase)
+        cockpitView.testView:Refresh(landing, force, phase, lastTestResult)
     end
 end
 
@@ -203,6 +206,7 @@ function OnBrakeTime(selection)
     scene = SCENE_COCKPIT
     phase = BrakeTestDemo.PHASE_LANDING
     pendingOutcome = nil
+    lastTestResult = nil  -- 清空上次结果
     preDriveView = nil
     -- 每次进入判定都从新的一次落点开始；换车沿用同一会话。
     if not landing.moving then landing:Start() end
@@ -350,6 +354,21 @@ function Confirm(source)
             completionStatus = "failed_wall"
             failureReason = "未能在道路内停车"
         end
+        
+        -- 保存测试结果供UI显示
+        lastTestResult = {
+            leverArm = leverResult and leverResult.l or 0,
+            concentrate = contactResult and contactResult.concentrate or 0,
+            conduction = contactResult and contactResult.conduction or 0,
+            effective = contactResult and contactResult.effective or 0,
+            torqueT = torqueT,
+            structureState = structureResult.structureState,
+            brakingTime = brakingResult.brakingTime,
+            brakingDistance = brakingResult.brakingDistance,
+            actualPedalForce = structureResult.actualPedalForce,
+            completionStatus = completionStatus,
+            failureReason = failureReason,
+        }
         
         -- 记录测试结果（方案A数据结构）
         local entry = {

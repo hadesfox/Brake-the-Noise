@@ -226,7 +226,8 @@ function View.Create(config, demo, onConfirm, onSelect)
     ---@param landing LandingModel
     ---@param force ForceCurveModel
     ---@param phase string
-    function view:Refresh(landing, force, phase)
+    ---@param testResult table? 方案A测试结果（可选）
+    function view:Refresh(landing, force, phase, testResult)
         local landingActive = phase == View.PHASE_LANDING
         landingBox:SetVisible(landingActive)
         forceBox:SetVisible(not landingActive)
@@ -356,15 +357,46 @@ function View.Create(config, demo, onConfirm, onSelect)
             actionText:SetText(force.moving and "确认 · 按停" or "确认 · 开始下一次测量")
             self.lastState = force.moving and "moving" or "locked"
             local sweetHalf = ForceCurve.SweetHalf(force.spec, force.agitation)
-            local text = string.format(
-                "踩踏力度 F  %.1f N\n意图力度  %.1f N\n甜蜜区宽度  %.1f%%（半宽 %.3f）",
-                force.force, force.intentForce, sweetHalf * 200, sweetHalf)
+            
+            -- 如果有测试结果，显示方案A数据
+            local text
+            if testResult and not force.moving then
+                text = string.format(
+                    "【方案A测试结果】\n" ..
+                    "踩踏力度 F  %.1f N\n" ..
+                    "载荷 T  %.1f\n" ..
+                    "结构状态  %s\n" ..
+                    "制动用时  %.2f 秒（主成绩）\n" ..
+                    "制动距离  %.1f 米\n" ..
+                    "实际制动力  %.1f N\n" ..
+                    "完成状态  %s",
+                    force.force, testResult.torqueT,
+                    testResult.structureState == "intact" and "未断裂" or "断裂",
+                    testResult.brakingTime, testResult.brakingDistance,
+                    testResult.actualPedalForce,
+                    testResult.completionStatus == "completed" and "正常完成" or 
+                    (testResult.completionStatus == "failed_broken" and "断裂失败" or "冲墙失败"))
+            else
+                text = string.format(
+                    "踩踏力度 F  %.1f N\n意图力度  %.1f N\n甜蜜区宽度  %.1f%%（半宽 %.3f）",
+                    force.force, force.intentForce, sweetHalf * 200, sweetHalf)
+            end
             if reading:GetText() ~= text then reading:SetText(text) end
             -- 隐藏状态只进开发面板，且仅当开关打开。
             if demo.showDebugState then
-                local debugText = string.format(
-                    "开发：暴躁 %.2f ｜ 疲劳 %.2f ｜ 甜蜜区中心 %.3f ｜ 陡峭 %.2f",
-                    force.agitation, force.fatigue, force.sweetCenter, force.spec.steepBase)
+                local debugText
+                if testResult and not force.moving then
+                    debugText = string.format(
+                        "开发：力臂 L=%.4f ｜ A集中=%.3f ｜ E传导=%.3f ｜ A有效=%.3f\n" ..
+                        "开发：暴躁 %.2f ｜ 疲劳 %.2f ｜ 甜蜜区中心 %.3f",
+                        testResult.leverArm, testResult.concentrate, 
+                        testResult.conduction, testResult.effective,
+                        force.agitation, force.fatigue, force.sweetCenter)
+                else
+                    debugText = string.format(
+                        "开发：暴躁 %.2f ｜ 疲劳 %.2f ｜ 甜蜜区中心 %.3f ｜ 陡峭 %.2f",
+                        force.agitation, force.fatigue, force.sweetCenter, force.spec.steepBase)
+                end
                 if debugReading:GetText() ~= debugText then debugReading:SetText(debugText) end
             else
                 if debugReading:GetText() ~= "" then debugReading:SetText("") end
