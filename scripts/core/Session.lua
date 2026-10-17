@@ -52,8 +52,17 @@ SessionFlow.BREAK_ROD = "rod_break"
 ---@field shoeCoverage number?
 ---@field intentForce number?
 ---@field force number?
----@field breakState string
+---@field breakState string? 保留兼容旧版，新版用 structureState
 ---@field source string
+---@field reactionTime number? 反应时间（秒）
+---@field brakingTime number? 100-0制动用时（秒），主成绩
+---@field brakingDistance number? 制动距离（米）
+---@field actualPedalForce number? 实际制动通道力 F×E传导
+---@field completionStatus string? "completed" | "failed_miss" | "failed_broken" | "failed_wall"
+---@field failureReason string? 失败原因描述
+---@field structureState string? "intact" | "broken"
+---@field hiddenDamageBefore number? 测试前隐藏损伤累计
+---@field hiddenDamageAfter number? 测试后隐藏损伤累计
 
 ---@class SessionWeather
 ---@field id string
@@ -139,6 +148,11 @@ local function CopyEntry(entry)
         pedalCoverage = entry.pedalCoverage, shoeCoverage = entry.shoeCoverage,
         intentForce = entry.intentForce, force = entry.force,
         breakState = entry.breakState, source = entry.source,
+        reactionTime = entry.reactionTime, brakingTime = entry.brakingTime,
+        brakingDistance = entry.brakingDistance, actualPedalForce = entry.actualPedalForce,
+        completionStatus = entry.completionStatus, failureReason = entry.failureReason,
+        structureState = entry.structureState,
+        hiddenDamageBefore = entry.hiddenDamageBefore, hiddenDamageAfter = entry.hiddenDamageAfter,
     }
 end
 
@@ -151,8 +165,17 @@ end
 ---@field shoeCoverage number?
 ---@field intentForce number?
 ---@field force number?
----@field breakState string
+---@field breakState string? 保留兼容旧版
 ---@field source string?
+---@field reactionTime number? 反应时间（秒）
+---@field brakingTime number? 100-0制动用时（秒）
+---@field brakingDistance number? 制动距离（米）
+---@field actualPedalForce number? 实际制动通道力
+---@field completionStatus string? 完成状态
+---@field failureReason string? 失败原因
+---@field structureState string? 二态结构状态
+---@field hiddenDamageBefore number? 测试前隐藏损伤
+---@field hiddenDamageAfter number? 测试后隐藏损伤
 
 ---@param flow SessionFlowConfig
 ---@param seed number
@@ -249,6 +272,15 @@ function SessionFlow:RecordTest(entry)
         force = entry.force,
         breakState = entry.breakState,
         source = entry.source or "unknown",
+        reactionTime = entry.reactionTime,
+        brakingTime = entry.brakingTime,
+        brakingDistance = entry.brakingDistance,
+        actualPedalForce = entry.actualPedalForce,
+        completionStatus = entry.completionStatus,
+        failureReason = entry.failureReason,
+        structureState = entry.structureState,
+        hiddenDamageBefore = entry.hiddenDamageBefore,
+        hiddenDamageAfter = entry.hiddenDamageAfter,
     }
     self.tests[#self.tests + 1] = stored
     return CopyEntry(stored)

@@ -16,6 +16,9 @@ local Session = require("core.Session")
 local Landing = require("gameplay.Landing")
 local ForceCurve = require("gameplay.ForceCurve")
 local Lever = require("gameplay.Lever")
+local ContactMapping = require("gameplay.ContactMapping")
+local BrakingSimulation = require("gameplay.BrakingSimulation")
+local StructureDamage = require("gameplay.StructureDamage")
 local ActionGate = require("core.ActionGate")
 local MainMenu = require("ui.MainMenu")
 local CharacterPrep = require("ui.CharacterPrep")
@@ -300,7 +303,55 @@ function Confirm(source)
         if not force.moving then return end
         local record = force:Lock(source)
         if not record then return end
-        -- 损伤/断裂判定未实现，这里显式记为 normal，不伪造断裂结果。
+        
+        -- 方案A：计算接触、载荷、结构判定、制动模拟
+        local leverResult = nil
+        local contactResult = nil
+        local torqueT = 0
+        local hiddenDamageBefore = 0 -- TODO: 从车辆状态获取
+        
+        if landingRecord and landingRecord.centroidX and landingRecord.centroidY then
+            -- 计算力臂
+            leverResult = Lever.Arm(DemoConfig.lever, landingRecord.centroidX, landingRecord.centroidY)
+            -- 计算接触映射
+            contactResult = ContactMapping.Map(DemoConfig.contact, 
+                landingRecord.pedalCoverage, landingRecord.shoeCoverage)
+            -- 计算载荷 T = F × L × A有效 × K姿势（K姿势暂用1.0占位）
+            torqueT = record.force * leverResult.l * contactResult.aEffective * 1.0
+        end
+        
+        -- 结构判定（二态：未断裂/断裂）
+        local durabilityEffective = 1000 -- TODO: 从车辆配置获取 M有效
+        local structureResult = StructureDamage.evaluate({
+            torqueT = torqueT,
+            durabilityEffective = durabilityEffective,
+            hiddenDamageBefore = hiddenDamageBefore,
+            pedalForce = record.force,
+            conductionE = contactResult and contactResult.conduction or 0,
+        })
+        
+        -- 制动模拟（纯逻辑，输出制动用时和距离）
+        local brakingResult = BrakingSimulation.simulate({
+            pedalForce = structureResult.actualPedalForce,
+            brakeCurve = DemoConfig.braking.brakeCurve,
+            resistance = DemoConfig.braking.resistance,
+            initialSpeed = 100, -- km/h
+            roadLength = DemoConfig.braking.roadLength,
+            structureBroken = structureResult.broken,
+        })
+        
+        -- 判定完成状态
+        local completionStatus = "completed"
+        local failureReason = nil
+        if structureResult.broken then
+            completionStatus = "failed_broken"
+            failureReason = "刹车踏板断裂，制动力归零"
+        elseif not brakingResult.stoppedInRoad then
+            completionStatus = "failed_wall"
+            failureReason = "未能在道路内停车"
+        end
+        
+        -- 记录测试结果（方案A数据结构）
         local entry = {
             outcome = "brake",
             shoeId = landingRecord and landingRecord.shoeId or "unknown",
@@ -310,13 +361,27 @@ function Confirm(source)
             shoeCoverage = landingRecord and landingRecord.shoeCoverage or nil,
             intentForce = record.intentForce,
             force = record.force,
-            breakState = Session.BREAK_NONE,
+            breakState = structureResult.broken and Session.BREAK_ROOT or Session.BREAK_NONE, -- 保留兼容
+            structureState = structureResult.structureState,
             source = source,
+            reactionTime = 0, -- TODO: 从实际响应计时获取
+            brakingTime = brakingResult.brakingTime,
+            brakingDistance = brakingResult.brakingDistance,
+            actualPedalForce = structureResult.actualPedalForce,
+            completionStatus = completionStatus,
+            failureReason = failureReason,
+            hiddenDamageBefore = hiddenDamageBefore,
+            hiddenDamageAfter = structureResult.hiddenDamageAfter,
         }
         local stored = session:RecordTest(entry)
-        print(string.format("[测试] 第 %d 次（机会 %d/%d）F=%.1fN 意图=%.1fN 结果=%s",
+        
+        -- 输出日志（方案A成绩口径）
+        print(string.format(
+            "[测试] 第 %d 次（机会 %d/%d）F=%.1fN T=%.1f 结构=%s 制动用时=%.2fs 距离=%.1fm 状态=%s",
             stored.sequence, session:TestsUsed(), session.flow.maxTests,
-            record.force, record.intentForce, stored.breakState))
+            record.force, torqueT, structureResult.structureState,
+            brakingResult.brakingTime, brakingResult.brakingDistance, completionStatus))
+        
         phase = BrakeTestDemo.PHASE_LANDING
         landingRecord = nil
         -- 第三次结束必须发帖；否则进入独立的"继续测试／发帖"选择界面。

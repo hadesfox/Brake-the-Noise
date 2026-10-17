@@ -33,13 +33,18 @@
 ---@field torqueT number 游戏等效破坏载荷
 ---@field durabilityRemaining number M剩余
 ---@field durabilityEffective number M有效 = M剩余 × C温度(θ)
----@field breakState string
 ---@field factors BrakeFactorRecord[]
 ---@field agitation number
 ---@field fatigue number
----@field feltSecondsRaw number
----@field feltSecondsShown number
----@field actualSeconds number
+---@field reactionTime number? 反应时间（秒），从制动信号到落点操作
+---@field brakingTime number? 100-0制动用时（秒），主成绩
+---@field brakingDistance number? 制动距离（米）
+---@field actualPedalForce number? 实际作用到制动通道的力 F×E传导（牛顿）
+---@field completionStatus string "completed" | "failed_miss" | "failed_broken" | "failed_wall"
+---@field failureReason string? 失败原因描述
+---@field structureState string "intact" | "broken" 二态结构结果
+---@field hiddenDamageBefore number 测试前隐藏损伤累计
+---@field hiddenDamageAfter number 测试后隐藏损伤累计
 
 ---@class BrakePostRecord
 ---@field titleTokenIds string[]
@@ -63,4 +68,4 @@
 -- 第二幕 → 清算/传播：post 原文副本、方向、势能和 causalChain。
 -- 完成局 → 档案：整个 session；测试索引和车辆索引分别保存。
 -- 原文与历史记录一经提交不由演出层覆写；档案只接收 completed 的正式局。
-return { schemaVersion = 2 }
+return { schemaVersion = 3 }

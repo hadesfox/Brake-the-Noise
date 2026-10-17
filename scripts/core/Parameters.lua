@@ -15,6 +15,9 @@ local REQUIRED = {
         "component.durability", "component.temperatureTolerance",
         "brake",
     },
+    braking = {
+        "braking.brakeCurve", "braking.resistance", "braking.roadLength",
+    },
     posting = { "tokens", "spread" },
 }
 

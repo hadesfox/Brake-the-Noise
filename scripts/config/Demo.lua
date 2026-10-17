@@ -78,4 +78,19 @@ return {
         speedAgitation = 0.55,
         speedFatigue = 0.35,
     },
+    -- 制动模拟占位参数：仅供开发验证纯逻辑制动模拟可行性，正式数值待作者提供。
+    braking = {
+        brakeCurve = {
+            minF = 80,   -- 最小有效踏板力（牛顿）
+            maxF = 1612, -- 最大有效踏板力（牛顿）
+            minA = 1.0,  -- 最小减速度（m/s²）
+            maxA = 10.0, -- 最大减速度（m/s²）
+        },
+        resistance = {
+            rolling = 0.015, -- 滚动阻力系数
+            air = 0.3,       -- 空气阻力系数
+            slope = 0,       -- 坡度（0为平路）
+        },
+        roadLength = 200, -- 道路长度（米）
+    },
 }
