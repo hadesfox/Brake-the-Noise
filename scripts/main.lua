@@ -314,10 +314,10 @@ function Confirm(source)
             -- 计算力臂
             leverResult = Lever.Arm(DemoConfig.lever, landingRecord.centroidX, landingRecord.centroidY)
             -- 计算接触映射
-            contactResult = ContactMapping.Map(DemoConfig.contact, 
+            contactResult = ContactMapping.Evaluate(DemoConfig.contact, 
                 landingRecord.pedalCoverage, landingRecord.shoeCoverage)
             -- 计算载荷 T = F × L × A有效 × K姿势（K姿势暂用1.0占位）
-            torqueT = record.force * leverResult.l * contactResult.aEffective * 1.0
+            torqueT = record.force * leverResult.l * contactResult.effective * 1.0
         end
         
         -- 结构判定（二态：未断裂/断裂）
