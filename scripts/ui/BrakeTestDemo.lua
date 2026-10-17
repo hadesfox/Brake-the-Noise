@@ -227,7 +227,8 @@ function View.Create(config, demo, onConfirm, onSelect)
     ---@param force ForceCurveModel
     ---@param phase string
     ---@param testResult table? 方案A测试结果（可选）
-    function view:Refresh(landing, force, phase, testResult)
+    ---@param resultTimer number? 结果展示倒计时（可选）
+    function view:Refresh(landing, force, phase, testResult, resultTimer)
         local landingActive = phase == View.PHASE_LANDING
         landingBox:SetVisible(landingActive)
         forceBox:SetVisible(not landingActive)
@@ -353,7 +354,14 @@ function View.Create(config, demo, onConfirm, onSelect)
         else
             phaseLabel:SetText(phase == View.PHASE_DONE and "本轮两轮判定已结束"
                 or "第 2 轮 · 力度")
-            caption:SetText(force.moving and "力度游标移动中" or "力度已锁定")
+            
+            -- 如果在结果展示期间，显示倒计时提示
+            if resultTimer and resultTimer > 0 then
+                caption:SetText(string.format("测试完成 · %.1f 秒后自动进入下一轮", resultTimer))
+            else
+                caption:SetText(force.moving and "力度游标移动中" or "力度已锁定")
+            end
+            
             actionText:SetText(force.moving and "确认 · 按停" or "确认 · 开始下一次测量")
             self.lastState = force.moving and "moving" or "locked"
             local sweetHalf = ForceCurve.SweetHalf(force.spec, force.agitation)

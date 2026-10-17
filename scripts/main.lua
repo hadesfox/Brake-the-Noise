@@ -50,6 +50,9 @@ local force = nil
 local gate = ActionGate.Create()
 local paused = false
 local skipNextUpdate = false
+-- 测试完成后的结果展示延迟计时器
+local resultDisplayTimer = 0
+local resultDisplayDuration = 3.0  -- 显示结果3秒后再跳转
 ---@type string
 local scene = SCENE_MENU
 -- 驾驶舱内的两轮阶段，取值与 ui/BrakeTestDemo 的阶段常量一致。
@@ -94,7 +97,9 @@ local function RefreshCockpit()
     if cockpitView and session and landing and force then
         local shoe = assert(DemoConfig.landing.shoes[landing.shoeIndex], "鞋型索引无效")
         cockpitView:RefreshHud(session, shoe.name)
-        cockpitView.testView:Refresh(landing, force, phase, lastTestResult)
+        -- 传递结果展示倒计时
+        local timer = resultDisplayTimer > 0 and resultDisplayTimer or nil
+        cockpitView.testView:Refresh(landing, force, phase, lastTestResult, timer)
     end
 end
 
@@ -142,6 +147,7 @@ function GoToMenu()
     prepSelection = nil
     pendingOutcome = nil
     landingRecord = nil
+    resultDisplayTimer = 0  -- 重置计时器
     gate:ClearHeld()
     SetSceneRoot(MainMenu.Create(function() Defer(StartTest) end,
         function() Defer(OpenArchive) end).root)
@@ -207,6 +213,7 @@ function OnBrakeTime(selection)
     phase = BrakeTestDemo.PHASE_LANDING
     pendingOutcome = nil
     lastTestResult = nil  -- 清空上次结果
+    resultDisplayTimer = 0  -- 重置计时器
     preDriveView = nil
     -- 每次进入判定都从新的一次落点开始；换车沿用同一会话。
     if not landing.moving then landing:Start() end
@@ -275,6 +282,8 @@ function Confirm(source)
     if paused or scene ~= SCENE_COCKPIT or pendingOutcome then return end
     if not landing or not force or not session then return end
     if not gate:Accept(time:GetFrameNumber()) then return end
+    -- 结果展示期间禁用确认操作
+    if resultDisplayTimer > 0 then return end
 
     if phase == BrakeTestDemo.PHASE_LANDING then
         if not landing.moving then return end
@@ -403,12 +412,11 @@ function Confirm(source)
         
         phase = BrakeTestDemo.PHASE_LANDING
         landingRecord = nil
-        -- 第三次结束必须发帖；否则进入独立的"继续测试／发帖"选择界面。
-        if session:PostingState() == Session.POST_REQUIRED then
-            Defer(function() GoToDecision() end)
-            return
-        end
-        Defer(function() GoToDecision() end)
+        -- 启动结果展示计时器，延迟跳转
+        resultDisplayTimer = resultDisplayDuration
+        -- 先刷新UI显示结果，不立即跳转
+        RefreshCockpit()
+        -- 跳转逻辑移到Update中的计时器处理
     end
 end
 
@@ -476,6 +484,18 @@ function HandleUpdate(eventType, eventData)
         return
     end
     local dt = eventData:GetFloat("TimeStep")
+    
+    -- 结果展示延迟计时器
+    if resultDisplayTimer > 0 then
+        resultDisplayTimer = resultDisplayTimer - dt
+        if resultDisplayTimer <= 0 then
+            resultDisplayTimer = 0
+            -- 延迟结束，跳转到决策界面
+            Defer(function() GoToDecision() end)
+        end
+        return
+    end
+    
     -- 发车前准备：推进加速计时，到达 100 km/h 后自动进入刹车时刻。
     if scene == SCENE_PREDRIVE and preDriveView then
         preDriveView:Update(dt)
